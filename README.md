@@ -1,2 +1,2 @@
 # Kinkajou
-Chess interface and engine
+Chess interface and engine.
