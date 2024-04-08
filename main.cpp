@@ -39,6 +39,5 @@ void showBoard(BoardState& board) {
 
 int main() {
   BoardState board;
-  makeMove(board, Move{0, 26});
   showBoard(board);
 }
