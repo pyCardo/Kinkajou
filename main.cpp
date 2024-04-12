@@ -59,7 +59,7 @@ void showBoard(BoardState& board, sf::RenderWindow& window) {
     if (*it != 0) {
       sf::Texture
           piece_gfx;  // non dovrebbe essere dichiarato ad ogni iterazione
-      std::string path{"pieces/" + std::string(1, *it) + ".png"};
+      std::string path{"../../pieces/" + std::string(1, *it) + ".png"};
       piece_gfx.loadFromFile(path);
 
       sf::Sprite piece_sprite;
