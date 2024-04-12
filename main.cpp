@@ -6,10 +6,11 @@
 #include <string>
 
 namespace constants {
-auto const COLOR_LIGHT = sf::Color(199, 157, 59, 255);
-auto const COLOR_DARK = sf::Color(245, 232, 201, 255);
-int const len{800};
-int squareSize = len / 8;
+auto const COLOR_LIGHT = sf::Color(255, 255, 229, 255);
+auto const COLOR_DARK = sf::Color(173, 115, 29, 255);
+float const PNG_SIZE = 2048;
+float const WINDOW_DIMENSION{700};
+float SQUARE_SIZE = WINDOW_DIMENSION / 8;
 }  // namespace constants
 
 struct BoardState {
@@ -49,25 +50,26 @@ void showBoardCLI(BoardState& board) {
 }
 
 void showBoard(BoardState& board, sf::RenderWindow& window) {
-  const float scale_factor{0.05};
-
+  const float scale_factor{
+      constants::SQUARE_SIZE /
+      constants::PNG_SIZE};  // non dovrebbe essere dichiarato ad ogni
+                             // iterazione
   int i{0};
   for (auto it = board.board.begin(); it != board.board.end(); ++it) {
     if (*it != 0) {
-      sf::Texture piece_gfx;
-      std::string path{"pieces/" + *it};
-      path += ".png";
+      sf::Texture
+          piece_gfx;  // non dovrebbe essere dichiarato ad ogni iterazione
+      std::string path{"pieces/" + std::string(1, *it) + ".png"};
       piece_gfx.loadFromFile(path);
 
       sf::Sprite piece_sprite;
       piece_sprite.setTexture(piece_gfx);
       piece_sprite.setScale(scale_factor, scale_factor);
-      piece_sprite.setPosition(constants::squareSize * i % 8,
-                               constants::squareSize * i / 8);
+      piece_sprite.setPosition(constants::SQUARE_SIZE * (i % 8),
+                               constants::SQUARE_SIZE * (i / 8));
 
       window.draw(piece_sprite);
     }
-
     ++i;
   }
 }
@@ -75,28 +77,30 @@ void showBoard(BoardState& board, sf::RenderWindow& window) {
 int main() {
   BoardState board;
 
-  sf::RenderWindow window(sf::VideoMode(constants::len, constants::len),
-                          "Chess");
+  sf::RenderWindow window(
+      sf::VideoMode(constants::WINDOW_DIMENSION, constants::WINDOW_DIMENSION),
+      "Chess");
   sf::RectangleShape square;
   sf::Event event;
-  square.setSize(sf::Vector2f(constants::squareSize, constants::squareSize));
+  square.setSize(sf::Vector2f(constants::SQUARE_SIZE, constants::SQUARE_SIZE));
 
   // generate board
   for (int i{0}; i < 64; i++) {
     int x = i % 8;
     int y = i / 8;
-    square.setPosition(x * constants::squareSize, y * constants::squareSize);
+    square.setPosition(x * constants::SQUARE_SIZE, y * constants::SQUARE_SIZE);
     if ((x + y) % 2 == 0) {
-      square.setFillColor(constants::COLOR_DARK);
+      square.setFillColor(
+          constants::COLOR_LIGHT);  // first square starts from 0
     } else {
-      square.setFillColor(constants::COLOR_LIGHT);
+      square.setFillColor(constants::COLOR_DARK);
     }
     window.draw(square);
   }
 
   showBoard(board, window);
 
-  window.setFramerateLimit(10);
+  window.setFramerateLimit(60);
 
   while (window.isOpen()) {
     // event handling
