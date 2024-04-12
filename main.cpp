@@ -9,7 +9,7 @@ auto const COLOR_LIGHT = sf::Color(199, 157, 59, 255);
 auto const COLOR_DARK = sf::Color(245, 232, 201, 255);
 }  // namespace constants
 
-struct BoardState {
+struct BoardState { // change to char once visualisation is migrated on to SFML
   std::array<int, 64> board{-4, -2, -3, -5, -6, -3, -2, -4,  //
                             -1, -1, -1, -1, -1, -1, -1, -1,  //
                             0,  0,  0,  0,  0,  0,  0,  0,   //
