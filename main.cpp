@@ -5,29 +5,51 @@
 
 int main() {
   Board board;
+  Piece b('b');
+  Piece B('B');
+  Piece k('k');
+  Piece K('K');
+  Piece n('n');
+  Piece N('N');
+  Piece p('p');
+  Piece P('P');
+  Piece q('q');
+  Piece Q('Q');
+  Piece r('r');
+  Piece R('R');
+  // std::unordered_map<char, Piece> charToPiece = {
+  //     {'b', b}, {'B', b}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
+  //     {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
+  // };
 
   sf::RenderWindow window(
       sf::VideoMode(graphics::WINDOW_DIMENSION, graphics::WINDOW_DIMENSION),
       "Chess");
+  window.setFramerateLimit(60);
+
   sf::RectangleShape square;
-  sf::Event event;
-  square.setSize(sf::Vector2f(graphics::SQUARE_SIZE, graphics::SQUARE_SIZE));
+  square.setSize(
+      sf::Vector2f(graphics::SQUARE_SIZE_F, graphics::SQUARE_SIZE_F));
 
   // generate board
   for (int i{0}; i < 64; i++) {
     int x = i % 8;
     int y = i / 8;
+
     if ((x + y) % 2 == 0) {  // first square starts from 0
-      sprite_setup(square, x*graphics::SQUARE_SIZE, y*graphics::SQUARE_SIZE, graphics::COLOR_LIGHT);
+      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
     } else {
-      sprite_setup(square, x*graphics::SQUARE_SIZE, y*graphics::SQUARE_SIZE, graphics::COLOR_DARK);
+      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
     }
     window.draw(square);
+
+    // auto id = board.position[i];
+    // charToPiece[i].toScreen(window, x, y);
   }
 
-  showBoard(board, window);
-
-  window.setFramerateLimit(60);
+  sf::Event event;
 
   while (window.isOpen()) {
     // event handling
