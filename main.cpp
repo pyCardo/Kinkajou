@@ -17,12 +17,10 @@ int main() {
   for (int i{0}; i < 64; i++) {
     int x = i % 8;
     int y = i / 8;
-    square.setPosition(static_cast<float>(x) * graphics::SQUARE_SIZE,
-                       static_cast<float>(y) * graphics::SQUARE_SIZE);
-    if ((x + y) % 2 == 0) {
-      square.setFillColor(graphics::COLOR_LIGHT);  // first square starts from 0
+    if ((x + y) % 2 == 0) {  // first square starts from 0
+      sprite_setup(square, x*graphics::SQUARE_SIZE, y*graphics::SQUARE_SIZE, graphics::COLOR_LIGHT);
     } else {
-      square.setFillColor(graphics::COLOR_DARK);
+      sprite_setup(square, x*graphics::SQUARE_SIZE, y*graphics::SQUARE_SIZE, graphics::COLOR_DARK);
     }
     window.draw(square);
   }
@@ -34,8 +32,22 @@ int main() {
   while (window.isOpen()) {
     // event handling
     while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) {
-        window.close();
+      switch (event.type) {
+        case sf::Event::Closed:
+          window.close();
+          break;
+        case sf::Event::MouseButtonPressed: {
+          auto location = sf::Mouse::getPosition(window);
+          char pressed = detect_square(location.x, location.y);
+          sprite_setup(square, location.x, location.y,
+                       graphics::COLOR_HIGHLIGHT);
+          window.draw(square);
+          showBoard(board, window);
+        } break;
+        /*detect_square; check if it's empty; highlight_square; when clicked
+         * again, move and clear starting square*/
+        default:
+          break;
       }
     }
 

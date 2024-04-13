@@ -23,8 +23,10 @@ $ g++ main.cpp -Wall -Wextra -lsfml-graphics -lsfml-window -lsfml-system
 
 Git will ignore the following folders/files:
 - `build/`
-- `a.out`
+- `*.out`
+- `*.exe`
 
 ## Issues
-- AddressSanitizer preventing compilation with Cmake
+- AddressSanitizer memory leaks
 - Low quality pngs
+- 

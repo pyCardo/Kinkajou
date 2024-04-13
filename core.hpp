@@ -4,7 +4,7 @@
 #include <array>
 
 struct Board {
-  std::array<char, 64> board{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
+  std::array<char, 64> position {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
                              'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',  //
                              0,   0,   0,   0,   0,   0,   0,   0,    //
                              0,   0,   0,   0,   0,   0,   0,   0,    //
@@ -18,13 +18,13 @@ struct Board {
 };
 
 struct Move {
-  char start_square;
-  char land_square;
+  char current;
+  char target;
 };
 
 void makeMove(Board& board, Move move) {
-  auto start = board.board.begin() + move.start_square;
-  auto land = board.board.begin() + move.land_square;
+  auto start = board.position.begin() + move.current;
+  auto land = board.position.begin() + move.target;
 
   *land = *start;
   *start = 0;
