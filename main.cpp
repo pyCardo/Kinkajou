@@ -1,4 +1,5 @@
 #include <cassert>
+#include <iostream>
 
 #include "core.hpp"
 #include "gfx.hpp"
@@ -17,10 +18,10 @@ int main() {
   Piece Q('Q');
   Piece r('r');
   Piece R('R');
-  // std::unordered_map<char, Piece> charToPiece = {
-  //     {'b', b}, {'B', b}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
-  //     {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
-  // };
+  std::unordered_map<char, Piece> charToPiece = {
+      {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
+      {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
+  };
 
   sf::RenderWindow window(
       sf::VideoMode(graphics::WINDOW_DIMENSION, graphics::WINDOW_DIMENSION),
@@ -32,25 +33,31 @@ int main() {
       sf::Vector2f(graphics::SQUARE_SIZE_F, graphics::SQUARE_SIZE_F));
 
   // generate board
-  for (int i{0}; i < 64; i++) {
-    int x = i % 8;
-    int y = i / 8;
+  {
+    int i{0};
+    for (auto it = board.position.begin(); it != board.position.end(); ++it) {
+      int x = i % 8;
+      int y = i / 8;
 
-    if ((x + y) % 2 == 0) {  // first square starts from 0
-      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
-    } else {
-      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
+      if ((x + y) % 2 == 0) {  // first square starts from 0
+        sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                     y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
+      } else {
+        sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                     y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
+      }
+      window.draw(square);
+
+      if (*it != 0) {
+        char id = *it;
+        // only compiles using map.at() instead of operator[]
+        charToPiece.at(id).toScreen(window, x, y);
+      }
+      ++i;
     }
-    window.draw(square);
-
-    // auto id = board.position[i];
-    // charToPiece[i].toScreen(window, x, y);
   }
 
   sf::Event event;
-
   while (window.isOpen()) {
     // event handling
     while (window.pollEvent(event)) {
@@ -64,7 +71,6 @@ int main() {
           sprite_setup(square, location.x, location.y,
                        graphics::COLOR_HIGHLIGHT);
           window.draw(square);
-          showBoard(board, window);
         } break;
         /*detect_square; check if it's empty; highlight_square; when clicked
          * again, move and clear starting square*/
