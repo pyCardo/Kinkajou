@@ -37,41 +37,20 @@ class Piece {
   void toScreen(sf::RenderWindow&, int, int);
 };
 
+
+
 void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
   sprite.setPosition(graphics::SQUARE_SIZE_F * static_cast<float>(x),
                      graphics::SQUARE_SIZE_F * static_cast<float>(y));
   window.draw(sprite);
 };
 
-void showBoard(Board& board,
-               sf::RenderWindow& window) {  // funzione molto pesante in runtime
-  sf::Texture piece_gfx;
-  {
-    int i{0};
-    for (auto it = board.position.begin(); it != board.position.end(); ++it) {
-      if (*it != 0) {
-        std::string path{"pieces/" + std::string(1, *it) + ".png"};
-        piece_gfx.loadFromFile(path);
-
-        sf::Sprite piece_sprite;
-        piece_sprite.setTexture(piece_gfx);
-        piece_sprite.setScale(graphics::SCALE_FACTOR, graphics::SCALE_FACTOR);
-        piece_sprite.setPosition(
-            graphics::SQUARE_SIZE_F * static_cast<float>(i % 8),
-            graphics::SQUARE_SIZE_F * static_cast<float>(i / 8));
-
-        window.draw(piece_sprite);
-      }
-      ++i;
-    }
-  }
-}
-
 char detect_square(int x, int y) {
   int a = x / graphics::SQUARE_SIZE_I;
   int b = y / graphics::SQUARE_SIZE_I;  // rounding to closest integer
   return static_cast<char>(a + b * 8);
 }
+
 
 /*Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
  * passarle un rect già creato, oppure vogliamo che lei lo crei e lo

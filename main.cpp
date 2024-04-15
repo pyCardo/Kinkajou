@@ -58,6 +58,10 @@ int main() {
   }
 
   sf::Event event;
+  Move move;
+  bool isMoving{false};
+  char pressed;
+
   while (window.isOpen()) {
     // event handling
     while (window.pollEvent(event)) {
@@ -65,15 +69,40 @@ int main() {
         case sf::Event::Closed:
           window.close();
           break;
-        case sf::Event::MouseButtonPressed: {
-          auto location = sf::Mouse::getPosition(window);
-          char pressed = detect_square(location.x, location.y);
-          sprite_setup(square, location.x, location.y,
-                       graphics::COLOR_HIGHLIGHT);
-          window.draw(square);
-        } break;
-        /*detect_square; check if it's empty; highlight_square; when clicked
-         * again, move and clear starting square*/
+
+        case sf::Event::MouseButtonPressed:
+          if (event.mouseButton.button == sf::Mouse::Left) {
+            auto location = sf::Mouse::getPosition(window);
+            pressed = detect_square(location.x, location.y);
+
+            if (isMoving) {
+              move.target = pressed;
+              board.makeMove(move);
+              {  // dovremmo fare una funzione che generalizzi questa parte di
+                 // codice (update square function)
+                if (board.position[move.current] != 0) {
+                  int x = move.current % 8;
+                  int y = move.current / 8;
+                  charToPiece.at(board.position[move.current])
+                      .toScreen(window, x, y);
+                }
+
+                if (board.position[move.target] != 0) {
+                  int x = move.target % 8;
+                  int y = move.target / 8;
+                  charToPiece.at(board.position[move.target])
+                      .toScreen(window, x, y);
+                }
+                window.clear();
+              }
+            } else {
+              board.position[pressed] != 0 ? move.current = pressed
+                                           : isMoving = !isMoving;
+            }
+            isMoving = !isMoving;
+          }
+          break;
+
         default:
           break;
       }
