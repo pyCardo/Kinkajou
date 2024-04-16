@@ -14,6 +14,7 @@ auto const COLOR_HIGHLIGHT = sf::Color(238, 75, 43, 255);
 int const PNG_SIZE = 2048;
 int const WINDOW_DIMENSION = 700;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
+int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
     WINDOW_DIMENSION /
     8.f;  // two different attributes to perform both integer and float division
@@ -48,28 +49,33 @@ void sprite_setup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
   rect.setFillColor(color);
 }
 
-void displayBoard(const Board& board, sf::RectangleShape& square, sf::RenderWindow& window, std::unordered_map<char, Piece>& charToPiece){
-  int i{0};
-      for (auto it = board.position.begin(); it != board.position.end(); ++it) {
-        int x = i % 8;
-        int y = i / 8;
+void displayBoard(const Board& board, sf::RectangleShape& square,
+                  sf::RenderWindow& window,
+                  std::unordered_map<char, Piece>& charToPiece) {
+  
+  window.clear();
 
-        if ((x + y) % 2 == 0) {  // first square starts from 0
-          sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                       y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
-        } else {
-          sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                       y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
-        }
-        window.draw(square);
+  for (unsigned long int i{0}; i < graphics::BOARD_SIZE; ++i) {
+    int x = static_cast<int>(i % 8);
+    int y = static_cast<int>(i / 8);
 
-        if (*it != 0) {
-          char id = *it;
-          // only compiles using map.at() instead of operator[]
-          charToPiece.at(id).toScreen(window, x, y);
-        }
-        ++i;
-      }
+    if ((x + y) % 2 == 0) {  // first square starts from 0
+      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
+    } else {
+      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
+    }
+    window.draw(
+        square);  // memory leak risolto se le linee "window.draw(square);" e
+                  // "charToPiece.at(id).toScreen(window, x, y);" sono rimosse
+
+    if (board.position[i] != 0) {
+      char id = board.position[i];
+      // only compiles using map.at() instead of operator[]
+      charToPiece.at(id).toScreen(window, x, y);
+    }
+  }
 }
 
 void Piece::toScreen(sf::RenderWindow& window, int x, int y) {

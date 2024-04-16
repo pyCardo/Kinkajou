@@ -18,6 +18,7 @@ int main() {
   Piece Q('Q');
   Piece r('r');
   Piece R('R');
+  
   std::unordered_map<char, Piece> charToPiece = {
       {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
       {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
@@ -59,7 +60,6 @@ int main() {
               move.target = pressed;
               board.makeMove(move);
 
-              window.clear();
               displayBoard(board, square, window, charToPiece);
             } else {
               board.position[static_cast<unsigned long int>(pressed)] != 0
