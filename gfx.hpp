@@ -37,7 +37,40 @@ class Piece {
   void toScreen(sf::RenderWindow&, int, int);
 };
 
+/*Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
+ * passarle un rect già creato, oppure vogliamo che lei lo crei e lo
+ * restituisca? La prima opzione sembra più efficiente nell'uso di memoria*/
+void sprite_setup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
+  rect.setPosition(
+      static_cast<float>(x / graphics::SQUARE_SIZE_I) * graphics::SQUARE_SIZE_F,
+      static_cast<float>(y / graphics::SQUARE_SIZE_I) *
+          graphics::SQUARE_SIZE_F);
+  rect.setFillColor(color);
+}
 
+void displayBoard(const Board& board, sf::RectangleShape& square, sf::RenderWindow& window, std::unordered_map<char, Piece>& charToPiece){
+  int i{0};
+      for (auto it = board.position.begin(); it != board.position.end(); ++it) {
+        int x = i % 8;
+        int y = i / 8;
+
+        if ((x + y) % 2 == 0) {  // first square starts from 0
+          sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                       y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
+        } else {
+          sprite_setup(square, x * graphics::SQUARE_SIZE_I,
+                       y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
+        }
+        window.draw(square);
+
+        if (*it != 0) {
+          char id = *it;
+          // only compiles using map.at() instead of operator[]
+          charToPiece.at(id).toScreen(window, x, y);
+        }
+        ++i;
+      }
+}
 
 void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
   sprite.setPosition(graphics::SQUARE_SIZE_F * static_cast<float>(x),
@@ -49,18 +82,6 @@ char detect_square(int x, int y) {
   int a = x / graphics::SQUARE_SIZE_I;
   int b = y / graphics::SQUARE_SIZE_I;  // rounding to closest integer
   return static_cast<char>(a + b * 8);
-}
-
-
-/*Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
- * passarle un rect già creato, oppure vogliamo che lei lo crei e lo
- * restituisca? La prima opzione sembra più efficiente nell'uso di memoria*/
-void sprite_setup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
-  rect.setPosition(
-      static_cast<float>(x / graphics::SQUARE_SIZE_I) * graphics::SQUARE_SIZE_F,
-      static_cast<float>(y / graphics::SQUARE_SIZE_I) *
-          graphics::SQUARE_SIZE_F);
-  rect.setFillColor(color);
 }
 
 #endif

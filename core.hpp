@@ -23,8 +23,8 @@ struct Board {
 };
 
 void Board::makeMove(Move move) {
-  Board::position[move.target] = Board::position[move.current]; 
-  Board::position[move.current] = 0;
+  Board::position[static_cast<unsigned long int>(move.target)] = Board::position[static_cast<unsigned long int>(move.current)]; 
+  Board::position[static_cast<unsigned long int>(move.current)] = 0;
 }
 
 #endif

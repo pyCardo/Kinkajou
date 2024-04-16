@@ -32,38 +32,18 @@ int main() {
   square.setSize(
       sf::Vector2f(graphics::SQUARE_SIZE_F, graphics::SQUARE_SIZE_F));
 
-  // generate board
-  {
-    int i{0};
-    for (auto it = board.position.begin(); it != board.position.end(); ++it) {
-      int x = i % 8;
-      int y = i / 8;
-
-      if ((x + y) % 2 == 0) {  // first square starts from 0
-        sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                     y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
-      } else {
-        sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                     y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
-      }
-      window.draw(square);
-
-      if (*it != 0) {
-        char id = *it;
-        // only compiles using map.at() instead of operator[]
-        charToPiece.at(id).toScreen(window, x, y);
-      }
-      ++i;
-    }
-  }
-
   sf::Event event;
   Move move;
   bool isMoving{false};
   char pressed;
 
+  displayBoard(board, square, window,
+               charToPiece);  // board is displayed on execution, then updated
+                              // when a move is detected
+
   while (window.isOpen()) {
     // event handling
+
     while (window.pollEvent(event)) {
       switch (event.type) {
         case sf::Event::Closed:
@@ -78,26 +58,13 @@ int main() {
             if (isMoving) {
               move.target = pressed;
               board.makeMove(move);
-              {  // dovremmo fare una funzione che generalizzi questa parte di
-                 // codice (update square function)
-                if (board.position[move.current] != 0) {
-                  int x = move.current % 8;
-                  int y = move.current / 8;
-                  charToPiece.at(board.position[move.current])
-                      .toScreen(window, x, y);
-                }
 
-                if (board.position[move.target] != 0) {
-                  int x = move.target % 8;
-                  int y = move.target / 8;
-                  charToPiece.at(board.position[move.target])
-                      .toScreen(window, x, y);
-                }
-                window.clear();
-              }
+              window.clear();
+              displayBoard(board, square, window, charToPiece);
             } else {
-              board.position[pressed] != 0 ? move.current = pressed
-                                           : isMoving = !isMoving;
+              board.position[static_cast<unsigned long int>(pressed)] != 0
+                  ? move.current = pressed
+                  : isMoving = !isMoving;
             }
             isMoving = !isMoving;
           }
