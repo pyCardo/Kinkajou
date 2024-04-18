@@ -3,31 +3,44 @@
 
 #include <array>
 
+namespace core {
+struct Move {
+  char current;
+  char target;
+};
+
+// lascio questo enum perché potrebbe servire in seguito
+// enum Piece_table { P, p, N, n, B, b, R, r, Q, q, K, k };
+
 struct Board {
-  std::array<char, 64> board{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
-                             'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',  //
-                             0,   0,   0,   0,   0,   0,   0,   0,    //
-                             0,   0,   0,   0,   0,   0,   0,   0,    //
-                             0,   0,   0,   0,   0,   0,   0,   0,    //
-                             0,   0,   0,   0,   0,   0,   0,   0,    //
-                             'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',  //
-                             'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'};
+  std::array<char, 64> position{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
+                                'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',  //
+                                0,   0,   0,   0,   0,   0,   0,   0,    //
+                                0,   0,   0,   0,   0,   0,   0,   0,    //
+                                0,   0,   0,   0,   0,   0,   0,   0,    //
+                                0,   0,   0,   0,   0,   0,   0,   0,    //
+                                'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',  //
+                                'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'};
+
+  // std::array<char, 64> position{r, n, b, q, k, b, n, r,  //
+  //                               p, p, p, p, p, p, p, p,  //
+  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
+  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
+  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
+  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
+  //                               P, P, P, P, P, P, P, P,  //
+  //                               R, N, B, Q, K, B, N, R};
 
   std::array<bool, 2> white_can_castle{true, true};
   std::array<bool, 2> black_can_castle{true, true};
+  void makeMove(Move);
 };
 
-struct Move {
-  char start_square;
-  char land_square;
-};
-
-void makeMove(Board& board, Move move) {
-  auto start = board.board.begin() + move.start_square;
-  auto land = board.board.begin() + move.land_square;
-
-  *land = *start;
-  *start = 0;
+void Board::makeMove(Move move) {
+  Board::position[static_cast<unsigned long int>(move.target)] =
+      Board::position[static_cast<unsigned long int>(move.current)];
+  Board::position[static_cast<unsigned long int>(move.current)] = 0;
 }
+}  // namespace core
 
 #endif

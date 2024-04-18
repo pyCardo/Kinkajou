@@ -1,44 +1,74 @@
 #include <cassert>
+#include <iostream>
 
 #include "core.hpp"
 #include "gfx.hpp"
 
 int main() {
-  Board board;
+  core::Board board;
+  core::Move move;
+  gfx::Piece b('b');
+  gfx::Piece B('B');
+  gfx::Piece k('k');
+  gfx::Piece K('K');
+  gfx::Piece n('n');
+  gfx::Piece N('N');
+  gfx::Piece p('p');
+  gfx::Piece P('P');
+  gfx::Piece q('q');
+  gfx::Piece Q('Q');
+  gfx::Piece r('r');
+  gfx::Piece R('R');
+
+  std::unordered_map<char, gfx::Piece> charToPiece = {
+      {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
+      {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
+  };
 
   sf::RenderWindow window(
-      sf::VideoMode(graphics::WINDOW_DIMENSION, graphics::WINDOW_DIMENSION),
+      sf::VideoMode(gfx::WINDOW_DIMENSION, gfx::WINDOW_DIMENSION),
       "Chess");
-  sf::RectangleShape square;
-  sf::Event event;
-  square.setSize(sf::Vector2f(graphics::SQUARE_SIZE, graphics::SQUARE_SIZE));
-
-  // generate board
-  for (int i{0}; i < 64; i++) {
-    int x = i % 8;
-    int y = i / 8;
-    square.setPosition(static_cast<float>(x) * graphics::SQUARE_SIZE,
-                       static_cast<float>(y) * graphics::SQUARE_SIZE);
-    if ((x + y) % 2 == 0) {
-      square.setFillColor(graphics::COLOR_LIGHT);  // first square starts from 0
-    } else {
-      square.setFillColor(graphics::COLOR_DARK);
-    }
-    window.draw(square);
-  }
-
-  showBoard(board, window);
-
   window.setFramerateLimit(60);
+
+  sf::RectangleShape square;
+  square.setSize(
+      sf::Vector2f(gfx::SQUARE_SIZE_F, gfx::SQUARE_SIZE_F));
+
+  sf::Event event;
+  bool isMoving{false};
+  char pressed;
+  // board is displayed on execution, then updated when a move is detected
 
   while (window.isOpen()) {
     // event handling
     while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed) {
-        window.close();
+      switch (event.type) {
+        case sf::Event::Closed:
+          window.close();
+          break;
+
+        case sf::Event::MouseButtonPressed:
+          if (event.mouseButton.button == sf::Mouse::Left) {
+            auto location = sf::Mouse::getPosition(window);
+            pressed = gfx::detectSquare(location.x, location.y);
+
+            if (isMoving) {
+              move.target = pressed;
+              board.makeMove(move);
+            } else {
+              board.position[static_cast<unsigned long int>(pressed)] != 0
+                  ? move.current = pressed
+                  : isMoving = !isMoving;
+            }
+            isMoving = !isMoving;
+          }
+          break;
+
+        default:
+          break;
       }
     }
-
+    gfx::displayBoard(board, square, window, charToPiece);
     window.display();
   }
 }
