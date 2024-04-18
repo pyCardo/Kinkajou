@@ -7,7 +7,7 @@
 
 #include "core.hpp"
 
-namespace graphics {
+namespace gfx {
 auto const COLOR_LIGHT = sf::Color(255, 255, 229, 255);
 auto const COLOR_DARK = sf::Color(173, 115, 29, 255);
 auto const COLOR_HIGHLIGHT = sf::Color(238, 75, 43, 255);
@@ -19,7 +19,6 @@ float const SQUARE_SIZE_F =
     WINDOW_DIMENSION /
     8.f;  // two different attributes to perform both integer and float division
 float const SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
-}  // namespace graphics
 
 class Piece {
   char c_;
@@ -33,7 +32,7 @@ class Piece {
             ".png";  // andrebbe rimossa la dipendenza dalla working directory
     texture_.loadFromFile(path_);
     sprite.setTexture(texture_);
-    sprite.setScale(graphics::SCALE_FACTOR, graphics::SCALE_FACTOR);
+    sprite.setScale(SCALE_FACTOR, SCALE_FACTOR);
   }
   void toScreen(sf::RenderWindow&, int, int);
 };
@@ -41,30 +40,29 @@ class Piece {
 /*Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
  * passarle un rect già creato, oppure vogliamo che lei lo crei e lo
  * restituisca? La prima opzione sembra più efficiente nell'uso di memoria*/
-void sprite_setup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
+void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
   rect.setPosition(
-      static_cast<float>(x / graphics::SQUARE_SIZE_I) * graphics::SQUARE_SIZE_F,
-      static_cast<float>(y / graphics::SQUARE_SIZE_I) *
-          graphics::SQUARE_SIZE_F);
+      static_cast<float>(x / SQUARE_SIZE_I) * SQUARE_SIZE_F,
+      static_cast<float>(y / SQUARE_SIZE_I) *
+          SQUARE_SIZE_F);
   rect.setFillColor(color);
 }
 
-void displayBoard(const Board& board, sf::RectangleShape& square,
+void displayBoard(const core::Board& board, sf::RectangleShape& square,
                   sf::RenderWindow& window,
                   std::unordered_map<char, Piece>& charToPiece) {
-  
   window.clear();
 
-  for (unsigned long int i{0}; i < graphics::BOARD_SIZE; ++i) {
+  for (unsigned long int i{0}; i < BOARD_SIZE; ++i) {
     int x = static_cast<int>(i % 8);
     int y = static_cast<int>(i / 8);
 
     if ((x + y) % 2 == 0) {  // first square starts from 0
-      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_LIGHT);
+      spriteSetup(square, x * SQUARE_SIZE_I,
+                  y * SQUARE_SIZE_I, COLOR_LIGHT);
     } else {
-      sprite_setup(square, x * graphics::SQUARE_SIZE_I,
-                   y * graphics::SQUARE_SIZE_I, graphics::COLOR_DARK);
+      spriteSetup(square, x * SQUARE_SIZE_I,
+                  y * SQUARE_SIZE_I, COLOR_DARK);
     }
     window.draw(
         square);  // memory leak risolto se le linee "window.draw(square);" e
@@ -79,15 +77,16 @@ void displayBoard(const Board& board, sf::RectangleShape& square,
 }
 
 void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
-  sprite.setPosition(graphics::SQUARE_SIZE_F * static_cast<float>(x),
-                     graphics::SQUARE_SIZE_F * static_cast<float>(y));
+  sprite.setPosition(SQUARE_SIZE_F * static_cast<float>(x),
+                     SQUARE_SIZE_F * static_cast<float>(y));
   window.draw(sprite);
-};
+}
 
-char detect_square(int x, int y) {
-  int a = x / graphics::SQUARE_SIZE_I;
-  int b = y / graphics::SQUARE_SIZE_I;  // rounding to closest integer
+char detectSquare(int x, int y) {
+  int a = x / SQUARE_SIZE_I;
+  int b = y / SQUARE_SIZE_I;  // rounding to closest integer
   return static_cast<char>(a + b * 8);
 }
+}  // namespace gfx
 
 #endif

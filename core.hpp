@@ -3,6 +3,7 @@
 
 #include <array>
 
+namespace core {
 struct Move {
   char current;
   char target;
@@ -40,5 +41,6 @@ void Board::makeMove(Move move) {
       Board::position[static_cast<unsigned long int>(move.current)];
   Board::position[static_cast<unsigned long int>(move.current)] = 0;
 }
+}  // namespace core
 
 #endif
