@@ -10,7 +10,8 @@
 namespace gfx {
 auto const COLOR_LIGHT = sf::Color(255, 255, 229, 255);
 auto const COLOR_DARK = sf::Color(173, 115, 29, 255);
-auto const COLOR_HIGHLIGHT = sf::Color(238, 75, 43, 255);
+auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(240, 105, 78, 255);
+auto const COLOR_HIGHLIGHT_DARK = sf::Color(238, 75, 43, 255);
 int const PNG_SIZE = 2048;
 int const WINDOW_DIMENSION = 700;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
@@ -107,6 +108,14 @@ void SetColorMap(std::array<sf::Color, 64>& colorMap) {
     } else {
       colorMap[i] = COLOR_DARK;
     }
+  }
+}
+
+void HighLightSquare(std::array<sf::Color, 64>& colorMap, int index) {
+  if (colorMap[static_cast<unsigned long int>(index)] == COLOR_DARK) {
+    colorMap[static_cast<unsigned long int>(index)] = COLOR_HIGHLIGHT_DARK;
+  } else if (colorMap[static_cast<unsigned long int>(index)] == COLOR_LIGHT) {
+    colorMap[static_cast<unsigned long int>(index)] = COLOR_HIGHLIGHT_LIGHT;
   }
 }
 

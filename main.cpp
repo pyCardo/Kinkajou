@@ -54,44 +54,57 @@ int main() {
             auto location = sf::Mouse::getPosition(window);
             pressed = gfx::detectSquare(location.x, location.y);
 
-            move.target = pressed;
-            bool possibleMove{std::find(moves.begin(), moves.end(), move) !=
-                              moves.end()};
-            std::cout << int(move.target) << std::endl;
-
-            if (isMoving && possibleMove) {
-              board.makeMove(move);
-              gfx::SetColorMap(colorMap);
-
-            } else {
-
-              moves.clear();
-              gfx::SetColorMap(colorMap);
-
-              if (board.position[static_cast<unsigned long int>(pressed)] !=
+            if (!isMoving) {
+              if (board.position[static_cast<long unsigned int>(pressed)] !=
                   0) {
                 move.current = pressed;
-
-                core::GenerateMoves(board, moves, pressed);
+                moves.clear();
+                core::GenerateMoves(board, moves, move.current);
 
                 for (auto possible_move : moves) {
-                  colorMap[static_cast<unsigned long int>(
-                      possible_move.target)] =
-                      gfx::COLOR_HIGHLIGHT;  // highlight possible move
+                  gfx::HighLightSquare(colorMap, possible_move.target);
                 }
-              } else {
-                isMoving = !isMoving;
+
+                isMoving = true;
               }
             }
-            isMoving = !isMoving;
+
+            if (isMoving) {
+              move.target = pressed;
+              bool moveIsPseudoLegal{
+                  std::find(moves.begin(), moves.end(), move) != moves.end()};
+
+              isMoving = false;
+              gfx::SetColorMap(colorMap);
+
+              if (moveIsPseudoLegal) {
+                board.makeMove(move);
+              } else {
+                moves.clear();
+
+                if (board.position[static_cast<long unsigned int>(pressed)] !=
+                    0) {
+                  move.current = pressed;
+                  moves.clear();
+                  core::GenerateMoves(board, moves, move.current);
+
+                  for (auto possible_move : moves) {
+                    gfx::HighLightSquare(colorMap, possible_move.target);
+                  }
+
+                  isMoving = true;
+                }
+              }
+            }
           }
+
           break;
 
         default:
           break;
       }
+      gfx::displayBoard(board, square, window, colorMap, charToPiece);
+      window.display();
     }
-    gfx::displayBoard(board, square, window, colorMap, charToPiece);
-    window.display();
   }
 }
