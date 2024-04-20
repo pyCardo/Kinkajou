@@ -20,6 +20,11 @@ float const SQUARE_SIZE_F =
     8.f;  // two different attributes to perform both integer and float division
 float const SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
 
+// struct Location {
+//   int x;
+//   int y;
+// };
+
 class Piece {
   char c_;
   std::string path_;
@@ -41,15 +46,14 @@ class Piece {
  * passarle un rect già creato, oppure vogliamo che lei lo crei e lo
  * restituisca? La prima opzione sembra più efficiente nell'uso di memoria*/
 void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
-  rect.setPosition(
-      static_cast<float>(x / SQUARE_SIZE_I) * SQUARE_SIZE_F,
-      static_cast<float>(y / SQUARE_SIZE_I) *
-          SQUARE_SIZE_F);
+  rect.setPosition(static_cast<float>(x / SQUARE_SIZE_I) * SQUARE_SIZE_F,
+                   static_cast<float>(y / SQUARE_SIZE_I) * SQUARE_SIZE_F);
   rect.setFillColor(color);
 }
 
 void displayBoard(const core::Board& board, sf::RectangleShape& square,
                   sf::RenderWindow& window,
+                  const std::array<sf::Color, 64>& colorMap,
                   std::unordered_map<char, Piece>& charToPiece) {
   window.clear();
 
@@ -58,11 +62,9 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
     int y = static_cast<int>(i / 8);
 
     if ((x + y) % 2 == 0) {  // first square starts from 0
-      spriteSetup(square, x * SQUARE_SIZE_I,
-                  y * SQUARE_SIZE_I, COLOR_LIGHT);
+      spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
     } else {
-      spriteSetup(square, x * SQUARE_SIZE_I,
-                  y * SQUARE_SIZE_I, COLOR_DARK);
+      spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
     }
     window.draw(
         square);  // memory leak risolto se le linee "window.draw(square);" e
@@ -87,6 +89,27 @@ char detectSquare(int x, int y) {
   int b = y / SQUARE_SIZE_I;  // rounding to closest integer
   return static_cast<char>(a + b * 8);
 }
+
+// Location pxlCoordinates(int i) {
+//   int x = static_cast<int>(i % 8);
+//   int y = static_cast<int>(i / 8);
+
+//   return Location{x * SQUARE_SIZE_I, y * SQUARE_SIZE_I};
+// }
+
+void SetColorMap(std::array<sf::Color, 64>& colorMap) {
+  for (unsigned long int i{0}; i < BOARD_SIZE; ++i) {
+    int x = static_cast<int>(i % 8);
+    int y = static_cast<int>(i / 8);
+
+    if ((x + y) % 2 == 0) {  // first square starts from 0
+      colorMap[i] = COLOR_LIGHT;
+    } else {
+      colorMap[i] = COLOR_DARK;
+    }
+  }
+}
+
 }  // namespace gfx
 
 #endif

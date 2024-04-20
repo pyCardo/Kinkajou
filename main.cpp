@@ -7,6 +7,8 @@
 int main() {
   core::Board board;
   core::Move move;
+  std::vector<core::Move> moves;
+
   gfx::Piece b('b');
   gfx::Piece B('B');
   gfx::Piece k('k');
@@ -25,19 +27,19 @@ int main() {
       {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
   };
 
+  std::array<sf::Color, 64> colorMap;
+  gfx::SetColorMap(colorMap);
+
   sf::RenderWindow window(
-      sf::VideoMode(gfx::WINDOW_DIMENSION, gfx::WINDOW_DIMENSION),
-      "Chess");
+      sf::VideoMode(gfx::WINDOW_DIMENSION, gfx::WINDOW_DIMENSION), "Chess");
   window.setFramerateLimit(60);
 
   sf::RectangleShape square;
-  square.setSize(
-      sf::Vector2f(gfx::SQUARE_SIZE_F, gfx::SQUARE_SIZE_F));
+  square.setSize(sf::Vector2f(gfx::SQUARE_SIZE_F, gfx::SQUARE_SIZE_F));
 
   sf::Event event;
   bool isMoving{false};
   char pressed;
-  // board is displayed on execution, then updated when a move is detected
 
   while (window.isOpen()) {
     // event handling
@@ -52,13 +54,34 @@ int main() {
             auto location = sf::Mouse::getPosition(window);
             pressed = gfx::detectSquare(location.x, location.y);
 
-            if (isMoving) {
-              move.target = pressed;
+            move.target = pressed;
+            bool possibleMove{std::find(moves.begin(), moves.end(), move) !=
+                              moves.end()};
+            std::cout << int(move.target) << std::endl;
+
+            if (isMoving && possibleMove) {
               board.makeMove(move);
+              gfx::SetColorMap(colorMap);
+
             } else {
-              board.position[static_cast<unsigned long int>(pressed)] != 0
-                  ? move.current = pressed
-                  : isMoving = !isMoving;
+
+              moves.clear();
+              gfx::SetColorMap(colorMap);
+
+              if (board.position[static_cast<unsigned long int>(pressed)] !=
+                  0) {
+                move.current = pressed;
+
+                core::GenerateMoves(board, moves, pressed);
+
+                for (auto possible_move : moves) {
+                  colorMap[static_cast<unsigned long int>(
+                      possible_move.target)] =
+                      gfx::COLOR_HIGHLIGHT;  // highlight possible move
+                }
+              } else {
+                isMoving = !isMoving;
+              }
             }
             isMoving = !isMoving;
           }
@@ -68,7 +91,7 @@ int main() {
           break;
       }
     }
-    gfx::displayBoard(board, square, window, charToPiece);
+    gfx::displayBoard(board, square, window, colorMap, charToPiece);
     window.display();
   }
 }
