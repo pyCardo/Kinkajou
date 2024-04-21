@@ -62,6 +62,87 @@ bool oppositeColor(
   return ((isWhite(a) != isWhite(b)) && a != 0 && b != 0);
 }
 
+std::array<int, 2> RookLimits(int currentSquare, int offset) {
+  const std::array<int, 4> limits{0, currentSquare / 8 * 8,
+                                  currentSquare / 8 * 8 + 7, 63};
+
+  int infLimit{0};
+  int supLimit{63};
+
+  if (std::abs(offset) == 8) {
+    infLimit = limits[0];
+    supLimit = limits[3];
+  } else if (std::abs(offset) == 1) {
+    infLimit = limits[1];
+    supLimit = limits[2];
+  }
+
+  return std::array<int, 2>{infLimit, supLimit};
+}
+
+std::array<int, 2> BishopLimits(int currentSquare, int offset) {
+  const std::array<int, 4> limits{
+      0, currentSquare + (currentSquare % 8 * (offset)),
+      currentSquare + ((7 - currentSquare % 8) * (offset)),
+      63};  // limits[1] is the east limit while moving diagonally,
+            // limit[2] is the west one
+
+  int infLimit{0};
+  int supLimit{63};
+
+  switch (offset) {
+    case -9:
+      infLimit = std::max(infLimit, limits[1]);
+      break;
+
+    case -7:
+      infLimit = std::max(infLimit, limits[2]);
+      break;
+
+    case 7:
+      supLimit = std::min(supLimit, limits[1]);
+      break;
+
+    case 9:
+      supLimit = std::min(supLimit, limits[2]);
+      break;
+
+    default:
+      break;
+  }
+  return std::array<int, 2>{infLimit, supLimit};
+}
+
+void MovesInLimits(const Board& board, std::vector<Move>& moves,
+                   int currentSquare, int offset, int infLimit, int supLimit) {
+  int targetSquare{currentSquare};
+  while (targetSquare >= infLimit && targetSquare <= supLimit) {
+    if (currentSquare == targetSquare) {
+      targetSquare += offset;
+      continue;
+    }
+
+    // break if target has the same color
+    if (sameColor(
+            board.position[static_cast<unsigned long int>(currentSquare)],
+            board.position[static_cast<long unsigned int>(targetSquare)])) {
+      break;
+    }
+
+    moves.push_back(Move{static_cast<char>(currentSquare),
+                         static_cast<char>(targetSquare)});
+
+    // break if target has different color
+    if (oppositeColor(
+            board.position[static_cast<unsigned long int>(currentSquare)],
+            board.position[static_cast<long unsigned int>(targetSquare)])) {
+      break;
+    }
+
+    targetSquare += offset;
+  }
+}
+
 void GenerateMoves(const Board& board, std::vector<Move>& moves,
                    int currentSquare) {
   switch (static_cast<char>(
@@ -85,122 +166,51 @@ void GenerateMoves(const Board& board, std::vector<Move>& moves,
 
       for (auto offset_it{offsets.begin()}; offset_it < offsets.end();
            ++offset_it) {
-        int targetSquare{currentSquare};
-        const std::array<int, 4> limits{
-            0, currentSquare + (currentSquare % 8 * (*offset_it)),
-            currentSquare + ((7 - currentSquare % 8) * (*offset_it)),
-            63};  // limits[1] is the east limit while moving diagonally,
-                  // limit[2] is the west one
+        const std::array<int, 2> limits{
+            BishopLimits(currentSquare, *offset_it)};
 
-        int infLimit{0};
-        int supLimit{63};
-
-        switch (*offset_it) {
-          case -9:
-            infLimit = std::max(infLimit, limits[1]);
-            break;
-
-          case -7:
-            infLimit = std::max(infLimit, limits[2]);
-            break;
-
-          case 7:
-            supLimit = std::min(supLimit, limits[1]);
-            break;
-
-          case 9:
-            supLimit = std::min(supLimit, limits[2]);
-            break;
-
-          default:
-            break;
-        }
-
-        while (targetSquare >= infLimit && targetSquare <= supLimit) {
-          if (currentSquare == targetSquare) {
-            targetSquare += *offset_it;
-            continue;
-          }
-
-          // break if target has the same color
-          if (sameColor(
-                  board.position[static_cast<unsigned long int>(currentSquare)],
-                  board.position[static_cast<long unsigned int>(
-                      targetSquare)])) {
-            break;
-          }
-
-          moves.push_back(Move{static_cast<char>(currentSquare),
-                               static_cast<char>(targetSquare)});
-
-          // break if target has different color
-          if (oppositeColor(
-                  board.position[static_cast<unsigned long int>(currentSquare)],
-                  board.position[static_cast<long unsigned int>(
-                      targetSquare)])) {
-            break;
-          }
-
-          targetSquare += *offset_it;
-        }
+        MovesInLimits(board, moves, currentSquare, *offset_it, limits[0],
+                      limits[1]);
       }
     } break;
 
     case 'r': {  // we create a scope to declare offsets case by case
 
       const std::array<int, 4> offsets{-8, -1, 1, 8};
-      const std::array<int, 4> limits{0, currentSquare / 8 * 8,
-                                      currentSquare / 8 * 8 + 7, 63};
 
       for (auto offset_it{offsets.begin()}; offset_it < offsets.end();
            ++offset_it) {
-        int targetSquare{currentSquare};
+        const std::array<int, 2> limits{RookLimits(currentSquare, *offset_it)};
 
-        int infLimit{0};
-        int supLimit{63};
-
-        if (std::abs(*offset_it) == 8) {
-          infLimit = limits[0];
-          supLimit = limits[3];
-        } else if (std::abs(*offset_it) == 1) {
-          infLimit = limits[1];
-          supLimit = limits[2];
-        }
-
-        while (targetSquare >= infLimit && targetSquare <= supLimit) {
-          if (currentSquare == targetSquare) {
-            targetSquare += *offset_it;
-            continue;
-          }
-
-          // break if target has the same color
-          if (sameColor(
-                  board.position[static_cast<unsigned long int>(currentSquare)],
-                  board.position[static_cast<long unsigned int>(
-                      targetSquare)])) {
-            break;
-          }
-
-          moves.push_back(Move{static_cast<char>(currentSquare),
-                               static_cast<char>(targetSquare)});
-
-          // break if target has different color
-          if (oppositeColor(
-                  board.position[static_cast<unsigned long int>(currentSquare)],
-                  board.position[static_cast<long unsigned int>(
-                      targetSquare)])) {
-            break;
-          }
-
-          // std::cout << targetSquare << std::endl;
-          targetSquare += *offset_it;
-        }
+        MovesInLimits(board, moves, currentSquare, *offset_it, limits[0],
+                      limits[1]);
       }
     }
 
     break;
 
-    case 'q':
+    case 'q':{
+      std::array<int, 4> offsets{-8, -1, 1, 8};
+
+      for (auto offset_it{offsets.begin()}; offset_it < offsets.end();
+           ++offset_it) {
+        const std::array<int, 2> limits{RookLimits(currentSquare, *offset_it)};
+
+        MovesInLimits(board, moves, currentSquare, *offset_it, limits[0],
+                      limits[1]);
+      }
+
+      offsets = {-9, -7, 7, 9};
+
+      for (auto offset_it{offsets.begin()}; offset_it < offsets.end();
+           ++offset_it) {
+        const std::array<int, 2> limits{
+            BishopLimits(currentSquare, *offset_it)};
+
+        MovesInLimits(board, moves, currentSquare, *offset_it, limits[0],
+                      limits[1]);
+      }
+    }
       break;
 
     case 'k':
