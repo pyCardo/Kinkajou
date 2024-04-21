@@ -19,12 +19,12 @@ struct Move {
 
 struct Board {
   std::array<char, 64> position{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
-                                0,   'p', 'p', 'p', 'p', 'p', 'p', 'p',  //
+                                0,   'p', 'p', 'p', 0,   'p', 'p', 'p',  //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
-                                'P', 'P', 'P', 'P', 'P', 'P', 'P', 0,  //
+                                'P', 'P', 'P', 'P', 0,   'P', 'P', 0,    //
                                 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'};
 
   // std::array<char, 64> position{r, n, b, q, k, b, n, r,  //
@@ -79,8 +79,72 @@ void GenerateMoves(const Board& board, std::vector<Move>& moves,
     case 'n':
       break;
 
-    case 'b':
-      break;
+    case 'b': {  // we create a scope to declare offsets case by case
+
+      const std::array<int, 4> offsets{-9, -7, 7, 9};
+
+      for (auto offset_it{offsets.begin()}; offset_it < offsets.end();
+           ++offset_it) {
+        int targetSquare{currentSquare};
+        const std::array<int, 4> limits{
+            0, currentSquare + (currentSquare % 8 * (*offset_it)),
+            currentSquare + ((7 - currentSquare % 8) * (*offset_it)),
+            63};  // limits[1] is the east limit while moving diagonally,
+                  // limit[2] is the west one
+
+        int infLimit{0};
+        int supLimit{63};
+
+        switch (*offset_it) {
+          case -9:
+            infLimit = std::max(infLimit, limits[1]);
+            break;
+
+          case -7:
+            infLimit = std::max(infLimit, limits[2]);
+            break;
+
+          case 7:
+            supLimit = std::min(supLimit, limits[1]);
+            break;
+
+          case 9:
+            supLimit = std::min(supLimit, limits[2]);
+            break;
+
+          default:
+            break;
+        }
+
+        while (targetSquare >= infLimit && targetSquare <= supLimit) {
+          if (currentSquare == targetSquare) {
+            targetSquare += *offset_it;
+            continue;
+          }
+
+          // break if target has the same color
+          if (sameColor(
+                  board.position[static_cast<unsigned long int>(currentSquare)],
+                  board.position[static_cast<long unsigned int>(
+                      targetSquare)])) {
+            break;
+          }
+
+          moves.push_back(Move{static_cast<char>(currentSquare),
+                               static_cast<char>(targetSquare)});
+
+          // break if target has different color
+          if (oppositeColor(
+                  board.position[static_cast<unsigned long int>(currentSquare)],
+                  board.position[static_cast<long unsigned int>(
+                      targetSquare)])) {
+            break;
+          }
+
+          targetSquare += *offset_it;
+        }
+      }
+    } break;
 
     case 'r': {  // we create a scope to declare offsets case by case
 
@@ -93,7 +157,7 @@ void GenerateMoves(const Board& board, std::vector<Move>& moves,
         int targetSquare{currentSquare};
 
         int infLimit{0};
-        int supLimit{0};
+        int supLimit{63};
 
         if (std::abs(*offset_it) == 8) {
           infLimit = limits[0];
