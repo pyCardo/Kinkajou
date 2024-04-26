@@ -8,12 +8,13 @@
 #include "core.hpp"
 
 namespace gfx {
+
 auto const COLOR_LIGHT = sf::Color(255, 255, 229, 255);
 auto const COLOR_DARK = sf::Color(173, 115, 29, 255);
 auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(240, 105, 78, 255);
 auto const COLOR_HIGHLIGHT_DARK = sf::Color(238, 75, 43, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 700;
+int const WINDOW_DIMENSION = 800;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
 int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
@@ -43,7 +44,13 @@ class Piece {
   void toScreen(sf::RenderWindow&, int, int);
 };
 
-/*Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
+void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
+  sprite.setPosition(SQUARE_SIZE_F * static_cast<float>(x),
+                     SQUARE_SIZE_F * static_cast<float>(y));
+  window.draw(sprite);
+}
+
+/* Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
  * passarle un rect già creato, oppure vogliamo che lei lo crei e lo
  * restituisca? La prima opzione sembra più efficiente nell'uso di memoria*/
 void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
@@ -67,9 +74,9 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
     } else {
       spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
     }
-    window.draw(
-        square);  // memory leak risolto se le linee "window.draw(square);" e
-                  // "charToPiece.at(id).toScreen(window, x, y);" sono rimosse
+    window.draw(square);
+    // memory leak risolto se le linee "window.draw(square);" e
+    // "charToPiece.at(id).toScreen(window, x, y);" sono rimosse
 
     if (board.position[i] != 0) {
       char id = board.position[i];
@@ -77,12 +84,6 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
       charToPiece.at(id).toScreen(window, x, y);
     }
   }
-}
-
-void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
-  sprite.setPosition(SQUARE_SIZE_F * static_cast<float>(x),
-                     SQUARE_SIZE_F * static_cast<float>(y));
-  window.draw(sprite);
 }
 
 char detectSquare(int x, int y) {
@@ -98,7 +99,7 @@ char detectSquare(int x, int y) {
 //   return Location{x * SQUARE_SIZE_I, y * SQUARE_SIZE_I};
 // }
 
-void SetColorMap(std::array<sf::Color, 64>& colorMap) {
+void setColorMap(std::array<sf::Color, 64>& colorMap) {
   for (unsigned long int i{0}; i < BOARD_SIZE; ++i) {
     int x = static_cast<int>(i % 8);
     int y = static_cast<int>(i / 8);
@@ -111,7 +112,7 @@ void SetColorMap(std::array<sf::Color, 64>& colorMap) {
   }
 }
 
-void HighLightSquare(std::array<sf::Color, 64>& colorMap, int index) {
+void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
   if (colorMap[static_cast<unsigned long int>(index)] == COLOR_DARK) {
     colorMap[static_cast<unsigned long int>(index)] = COLOR_HIGHLIGHT_DARK;
   } else if (colorMap[static_cast<unsigned long int>(index)] == COLOR_LIGHT) {

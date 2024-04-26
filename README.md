@@ -6,27 +6,26 @@
 
 Set up debug mode with:
 ~~~bash
-$ cmake -S . -B build/debug -DCMAKE_BUILD_TYPE=Debug
+$ cmake -S . -B build/-Debug -DCMAKE_BUILD_TYPE=Debug
 ~~~
 
 Compile with:
 ~~~bash
-$ cmake --build build/debug
+$ cmake --build build/-Debug
 ~~~
 
-Manual compile:
+Manual compile (no warnings):
 ~~~bash
-$ g++ main.cpp -Wall -Wextra -lsfml-graphics -lsfml-window -lsfml-system
+$ g++ main.cpp -lsfml-graphics -lsfml-window -lsfml-system
 ~~~
 
 ### .gitignore
 
 Git will ignore the following folders/files:
+- `.vscode/`
 - `build/`
-- `*.out`
-- `*.exe`
+- `*.out` and `*.exe`
 
 ## Issues
-- AddressSanitizer memory leaks
+- ASan memory leaks
 - Low quality pngs
-- 

@@ -1,6 +1,11 @@
+# vscode configuration files
 .vscode/
-build/
-*.out
-*.exe
 .vscode/settings.json
 /.vscode
+
+# build folder
+build/
+
+# executables
+*.out
+*.exe
