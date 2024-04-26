@@ -5,10 +5,22 @@
 #include <vector>
 
 namespace core {
+struct Location {
+  int x;
+  int y;
+};
+
 namespace offsets {
 auto const rook{std::array<int, 4>{-8, -1, 1, 8}};
 auto const bishop{std::array<int, 4>{-9, -7, 7, 9}};
+auto const knight{std::array<Location, 8>{
+    Location{-2, -1}, Location{-1, -2}, Location{1, -2}, Location{2, -1},
+    Location{-2, 1}, Location{-1, 2}, Location{1, 2}, Location{2, 1}}};
+auto const king{std::array<Location, 8>{
+    Location{-1, -1}, Location{0, -1}, Location{1, -1}, Location{-1, 0},
+    Location{1, 0}, Location{-1, 1}, Location{0, 1}, Location{1, 1}}};
 }  // namespace offsets
+
 struct Move {
   char current;
   char target;
@@ -51,17 +63,22 @@ void Board::makeMove(Move move) {
   position[static_cast<unsigned long int>(move.current)] = 0;
 }
 
-bool isWhite(char c) {
-  int i{static_cast<int>(c)};
+bool isWhite(int index, const Board& board) {
+  int i{
+      static_cast<int>(board.position[static_cast<unsigned long int>(index)])};
   return (i >= 65 && i <= 90);  // ASCII values for uppercase letters
 }
 
-bool sameColor(char a, char b) {
-  return ((isWhite(a) == isWhite(b)) && a != 0 && b != 0);
+bool sameColor(int index_a, int index_b, const Board& board) {
+  return ((isWhite(index_a, board) == isWhite(index_b, board)) &&
+          board.position[static_cast<unsigned long int>(index_a)] != 0 &&
+          board.position[static_cast<unsigned long int>(index_b)] != 0);
 }
 
-bool oppositeColor(char a, char b) {
-  return ((isWhite(a) != isWhite(b)) && a != 0 && b != 0);
+bool oppositeColor(int index_a, int index_b, const Board& board) {
+  return ((isWhite(index_a, board) == isWhite(index_b, board)) &&
+          board.position[static_cast<unsigned long int>(index_a)] != 0 &&
+          board.position[static_cast<unsigned long int>(index_b)] != 0);
 }  // necessary because !sameColor() doesn't consider empty squares
 
 std::array<int, 2> checkLimits(int currentSquare, int offset) {
@@ -127,9 +144,7 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
     }
 
     // break if target has the same color
-    if (sameColor(
-            board.position[static_cast<unsigned long int>(currentSquare)],
-            board.position[static_cast<long unsigned int>(targetSquare)])) {
+    if (sameColor(currentSquare, targetSquare, board)) {
       break;
     }
 
@@ -137,9 +152,7 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
                          static_cast<char>(targetSquare)});
 
     // break if target has different color
-    if (oppositeColor(
-            board.position[static_cast<unsigned long int>(currentSquare)],
-            board.position[static_cast<long unsigned int>(targetSquare)])) {
+    if (oppositeColor(currentSquare, targetSquare, board)) {
       break;
     }
 
@@ -147,46 +160,61 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
   }
 }
 
+void SlidingPieceLoop(const Board& board, std::vector<Move>& moves,
+                      int currentSquare, const std::array<int, 4>& offsets) {
+  for (auto offset : offsets) {
+    const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
+    movesInLimits(board, moves, limits, currentSquare, offset);
+  }
+}
+
+void NonSlidingPieceLoop(const Board& board, std::vector<Move>& moves,
+                         int currentSquare,
+                         const std::array<Location, 8>& offsets) {
+  int x{currentSquare % 8};
+  int y{currentSquare / 8};
+
+  for (auto offset : offsets) {
+    bool x_limit{0 <= x + offset.x && x + offset.x <= 7};
+    bool y_limit{0 <= y + offset.y && y + offset.y <= 7};
+
+    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    if (x_limit && y_limit && !sameColor(currentSquare, targetSquare, board)) {
+      moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
+    }
+  }
+}
+
 void generateMoves(const Board& board, std::vector<Move>& moves,
                    int currentSquare) {
-  switch (static_cast<char>(std::tolower(
-      board.position[static_cast<unsigned long int>(currentSquare)]))) {
-      /* std::tolower() returns an integer, which is converted to char; movegen
-       * is symmetrical for black and white */
-
+    char pieceInCurrentSquare{static_cast<char>(
+      std::tolower(board.position[static_cast<unsigned long int>(
+          currentSquare)]))}; /* std::tolower() returns an integer, which is
+                               * converted to char; movegen is symmetrical for
+                               * black and white */
+  switch (pieceInCurrentSquare) {
     case 'p':
       break;
 
     case 'n':
+      NonSlidingPieceLoop(board, moves, currentSquare, offsets::knight);
       break;
 
-    case 'b': {
-      for (auto offset : offsets::bishop) {
-        const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
-        movesInLimits(board, moves, limits, currentSquare, offset);
-      }
-    } break;
+    case 'b':
+      SlidingPieceLoop(board, moves, currentSquare, offsets::bishop);
+      break;
 
-    case 'r': {
-      for (auto offset : offsets::rook) {
-        const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
-        movesInLimits(board, moves, limits, currentSquare, offset);
-      }
-    } break;
+    case 'r':
+      SlidingPieceLoop(board, moves, currentSquare, offsets::rook);
+      break;
 
-    case 'q': {
-      for (auto offset : offsets::rook) {
-        const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
-        movesInLimits(board, moves, limits, currentSquare, offset);
-      }
-
-      for (auto offset : offsets::bishop) {
-        const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
-        movesInLimits(board, moves, limits, currentSquare, offset);
-      }
-    } break;
+    case 'q':
+      SlidingPieceLoop(board, moves, currentSquare, offsets::bishop);
+      SlidingPieceLoop(board, moves, currentSquare, offsets::rook);
+      break;
 
     case 'k':
+      NonSlidingPieceLoop(board, moves, currentSquare, offsets::king);
       break;
 
     default:

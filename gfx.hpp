@@ -22,11 +22,6 @@ float const SQUARE_SIZE_F =
     8.f;  // two different attributes to perform both integer and float division
 float const SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
 
-// struct Location {
-//   int x;
-//   int y;
-// };
-
 class Piece {
   char c_;
   std::string path_;
