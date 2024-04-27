@@ -19,6 +19,11 @@ auto const knight{std::array<Location, 8>{
 auto const king{std::array<Location, 8>{
     Location{-1, -1}, Location{0, -1}, Location{1, -1}, Location{-1, 0},
     Location{1, 0}, Location{-1, 1}, Location{0, 1}, Location{1, 1}}};
+auto const whitePawn{std::array<Location, 4>{
+    Location{0, -1}, Location{0, -2}, Location{-1, -1}, Location{1, -1}}};
+auto const blackPawn{std::array<Location, 4>{Location{0, 1}, Location{0, 2},
+                                             Location{-1, 1}, Location{1, 1}}};
+// white first, then black
 }  // namespace offsets
 
 struct Move {
@@ -35,12 +40,12 @@ struct Move {
 
 struct Board {
   std::array<char, 64> position{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
-                                0,   'p', 'p', 'p', 0,   'p', 'p', 'p',  //
+                                'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',  //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
                                 0,   0,   0,   0,   0,   0,   0,   0,    //
-                                'P', 'P', 'P', 'P', 0,   'P', 'P', 0,    //
+                                'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',  //
                                 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'};
 
   // std::array<char, 64> position{r, n, b, q, k, b, n, r,  //
@@ -52,15 +57,41 @@ struct Board {
   //                               P, P, P, P, P, P, P, P,  //
   //                               R, N, B, Q, K, B, N, R};
 
-  std::array<bool, 2> white_can_castle{true, true};
-  std::array<bool, 2> black_can_castle{true, true};
+  std::array<bool, 2> whiteCastling{true, true};
+  std::array<bool, 2> blackCastling{true, true};
+  char enPassant{64};
+  // is en passant available? initialized to 64 because it's not a valid index
+
   void makeMove(Move);
 };
 
 void Board::makeMove(Move move) {
-  position[static_cast<unsigned long int>(move.target)] =
-      position[static_cast<unsigned long int>(move.current)];
-  position[static_cast<unsigned long int>(move.current)] = 0;
+  char& currentPiece{position[static_cast<unsigned long int>(move.current)]};
+  char& targetPiece{position[static_cast<unsigned long int>(move.target)]};
+
+  bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
+
+  if (isPawn && move.target == enPassant) {
+    int x{static_cast<int>(move.target) % 8};
+    int y{static_cast<int>(move.current) / 8};
+    position[static_cast<unsigned long int>(x + y * 8)] = 0;
+  }
+  enPassant = 64;
+  if (isPawn) {
+    if (std::abs(static_cast<int>(move.current - move.target))) {
+      enPassant =
+          static_cast<char>(static_cast<int>(move.current + move.target) / 2);
+    }
+  }
+  int y = move.target / 8;
+  if (currentPiece == 'p' && y == 7) {
+    targetPiece = 'q';
+  } else if (currentPiece == 'P' && y == 0) {
+    targetPiece = 'Q';
+  } else {
+    targetPiece = currentPiece;
+  }
+  currentPiece = 0;
 }
 
 bool isWhite(int index, const Board& board) {
@@ -76,7 +107,7 @@ bool sameColor(int index_a, int index_b, const Board& board) {
 }
 
 bool oppositeColor(int index_a, int index_b, const Board& board) {
-  return ((isWhite(index_a, board) == isWhite(index_b, board)) &&
+  return ((isWhite(index_a, board) != isWhite(index_b, board)) &&
           board.position[static_cast<unsigned long int>(index_a)] != 0 &&
           board.position[static_cast<unsigned long int>(index_b)] != 0);
 }  // necessary because !sameColor() doesn't consider empty squares
@@ -160,61 +191,105 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
   }
 }
 
-void SlidingPieceLoop(const Board& board, std::vector<Move>& moves,
-                      int currentSquare, const std::array<int, 4>& offsets) {
+void slidingLoop(const Board& board, std::vector<Move>& moves,
+                 int currentSquare, const std::array<int, 4>& offsets) {
   for (auto offset : offsets) {
     const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
     movesInLimits(board, moves, limits, currentSquare, offset);
   }
 }
 
-void NonSlidingPieceLoop(const Board& board, std::vector<Move>& moves,
-                         int currentSquare,
-                         const std::array<Location, 8>& offsets) {
+void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
+                    int currentSquare, const std::array<Location, 8>& offsets) {
   int x{currentSquare % 8};
   int y{currentSquare / 8};
 
   for (auto offset : offsets) {
-    bool x_limit{0 <= x + offset.x && x + offset.x <= 7};
-    bool y_limit{0 <= y + offset.y && y + offset.y <= 7};
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
 
     char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
-    if (x_limit && y_limit && !sameColor(currentSquare, targetSquare, board)) {
+    if (xLimit && yLimit && !sameColor(currentSquare, targetSquare, board)) {
       moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
     }
   }
 }
 
-void generateMoves(const Board& board, std::vector<Move>& moves,
-                   int currentSquare) {
-    char pieceInCurrentSquare{static_cast<char>(
+void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
+              const std::array<Location, 4>& offsets) {
+  int x{currentSquare % 8};
+  int y{currentSquare / 8};
+
+  bool amIWhite{isWhite(currentSquare, board)};
+  bool atStart{(amIWhite && y == 6) || (!amIWhite && y == 1)};
+
+  char advanceSquare{static_cast<char>((y + (offsets[0]).y) * 8 + x)};
+  // access the square in front of the pawn
+  bool canAdvance = static_cast<int>(
+      board.position[static_cast<unsigned long int>(advanceSquare)] == 0);
+  // is that square empty
+
+  for (auto offset : offsets) {
+    if (!atStart && std::abs(offset.y) == 2) {
+      continue;
+    }  // skip the double jump offset if the pawn is not on its starting square
+
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y &&
+                y + offset.y <= 7};  // is the target square inside the board
+    bool isCapturing{offset.x != 0};
+
+    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+
+    bool isSameColor{sameColor(currentSquare, targetSquare, board)};
+    bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
+
+    if (xLimit && yLimit) {
+      if (isCapturing && (isOppositeColor || targetSquare == board.enPassant)) {
+        moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
+      } else if (!isCapturing && canAdvance && !isSameColor &&
+                 !isOppositeColor) {
+        moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
+      }
+    }
+  }
+}
+
+void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
+  char currentPiece{static_cast<char>(
       std::tolower(board.position[static_cast<unsigned long int>(
           currentSquare)]))}; /* std::tolower() returns an integer, which is
                                * converted to char; movegen is symmetrical for
                                * black and white */
-  switch (pieceInCurrentSquare) {
+  switch (currentPiece) {
     case 'p':
+      if (isWhite(currentSquare, board)) {
+        pawnLoop(board, moves, currentSquare, offsets::whitePawn);
+      } else {
+        pawnLoop(board, moves, currentSquare, offsets::blackPawn);
+      }
+      // modify board.enPassant if necessary
       break;
 
     case 'n':
-      NonSlidingPieceLoop(board, moves, currentSquare, offsets::knight);
+      nonSlidingLoop(board, moves, currentSquare, offsets::knight);
       break;
 
     case 'b':
-      SlidingPieceLoop(board, moves, currentSquare, offsets::bishop);
+      slidingLoop(board, moves, currentSquare, offsets::bishop);
       break;
 
     case 'r':
-      SlidingPieceLoop(board, moves, currentSquare, offsets::rook);
+      slidingLoop(board, moves, currentSquare, offsets::rook);
       break;
 
     case 'q':
-      SlidingPieceLoop(board, moves, currentSquare, offsets::bishop);
-      SlidingPieceLoop(board, moves, currentSquare, offsets::rook);
+      slidingLoop(board, moves, currentSquare, offsets::bishop);
+      slidingLoop(board, moves, currentSquare, offsets::rook);
       break;
 
     case 'k':
-      NonSlidingPieceLoop(board, moves, currentSquare, offsets::king);
+      nonSlidingLoop(board, moves, currentSquare, offsets::king);
       break;
 
     default:

@@ -9,12 +9,12 @@
 
 namespace gfx {
 
-auto const COLOR_LIGHT = sf::Color(255, 255, 229, 255);
-auto const COLOR_DARK = sf::Color(173, 115, 29, 255);
-auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(240, 105, 78, 255);
-auto const COLOR_HIGHLIGHT_DARK = sf::Color(238, 75, 43, 255);
+auto const COLOR_LIGHT = sf::Color(240, 218, 181, 255);
+auto const COLOR_DARK = sf::Color(180, 136, 99, 255);
+auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
+auto const COLOR_HIGHLIGHT_DARK = sf::Color(211, 92, 71, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 800;
+int const WINDOW_DIMENSION = 700;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
 int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
