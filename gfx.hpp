@@ -14,7 +14,7 @@ auto const COLOR_DARK = sf::Color(180, 136, 99, 255);
 auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
 auto const COLOR_HIGHLIGHT_DARK = sf::Color(211, 92, 71, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 700;
+int const WINDOW_DIMENSION = 800;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
 int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
@@ -87,11 +87,11 @@ char detectSquare(int x, int y) {
   return static_cast<char>(a + b * 8);
 }
 
-// Location pxlCoordinates(int i) {
+// Delta pxlCoordinates(int i) {
 //   int x = static_cast<int>(i % 8);
 //   int y = static_cast<int>(i / 8);
 
-//   return Location{x * SQUARE_SIZE_I, y * SQUARE_SIZE_I};
+//   return Delta{x * SQUARE_SIZE_I, y * SQUARE_SIZE_I};
 // }
 
 void setColorMap(std::array<sf::Color, 64>& colorMap) {

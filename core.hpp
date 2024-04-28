@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace core {
-struct Location {
+struct Delta {  // standing for "change"
   int x;
   int y;
 };
@@ -15,16 +15,16 @@ struct Location {
 namespace offsets {
 auto const rook{std::array<int, 4>{-8, -1, 1, 8}};
 auto const bishop{std::array<int, 4>{-9, -7, 7, 9}};
-auto const knight{std::array<Location, 8>{
-    Location{-2, -1}, Location{-1, -2}, Location{1, -2}, Location{2, -1},
-    Location{-2, 1}, Location{-1, 2}, Location{1, 2}, Location{2, 1}}};
-auto const king{std::array<Location, 8>{
-    Location{-1, -1}, Location{0, -1}, Location{1, -1}, Location{-1, 0},
-    Location{1, 0}, Location{-1, 1}, Location{0, 1}, Location{1, 1}}};
-auto const whitePawn{std::array<Location, 4>{
-    Location{0, -1}, Location{0, -2}, Location{-1, -1}, Location{1, -1}}};
-auto const blackPawn{std::array<Location, 4>{Location{0, 1}, Location{0, 2},
-                                             Location{-1, 1}, Location{1, 1}}};
+auto const knight{std::array<Delta, 8>{Delta{-2, -1}, Delta{-1, -2},
+                                       Delta{1, -2}, Delta{2, -1}, Delta{-2, 1},
+                                       Delta{-1, 2}, Delta{1, 2}, Delta{2, 1}}};
+auto const king{std::array<Delta, 8>{Delta{-1, -1}, Delta{0, -1}, Delta{1, -1},
+                                     Delta{-1, 0}, Delta{1, 0}, Delta{-1, 1},
+                                     Delta{0, 1}, Delta{1, 1}}};
+auto const whitePawn{std::array<Delta, 4>{Delta{0, -1}, Delta{0, -2},
+                                          Delta{-1, -1}, Delta{1, -1}}};
+auto const blackPawn{
+    std::array<Delta, 4>{Delta{0, 1}, Delta{0, 2}, Delta{-1, 1}, Delta{1, 1}}};
 // white first, then black
 }  // namespace offsets
 
@@ -59,10 +59,19 @@ struct Board {
   //                               P, P, P, P, P, P, P, P,  //
   //                               R, N, B, Q, K, B, N, R};
 
-  std::array<bool, 2> whiteCastling{true, true}; // to be read: left, right, according to player view
+  std::array<bool, 2> whiteCastling{true, true};
   std::array<bool, 2> blackCastling{true, true};
+  // to be read: left, right, according to player view
+
+  bool whiteToMove{true};
+
   char enPassant{64};
-  // is en passant available? initialized to 64 because it's not a valid index
+  // is en passant available? initialized to 64 as it's not a valid index
+
+  char& accessBoard(unsigned long int);
+  char& accessBoard(int);
+  char accessBoard(int) const;
+  // overloaded for conversion purposes
 
   void makeMove(Move);
 };
@@ -84,9 +93,9 @@ void slidingLoop(const Board&, std::vector<Move>&, int,
 void castle(const Board&, std::vector<Move>&, int);
 
 void nonSlidingLoop(const Board&, std::vector<Move>&, int,
-                    const std::array<Location, 8>&);
+                    const std::array<Delta, 8>&);
 
-void pawnLoop(Board&, std::vector<Move>&, int, const std::array<Location, 4>&);
+void pawnLoop(Board&, std::vector<Move>&, int, const std::array<Delta, 4>&);
 
 void generateMoves(Board&, std::vector<Move>&, int);
 

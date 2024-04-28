@@ -4,12 +4,21 @@
 
 namespace core {
 
+char& Board::accessBoard(unsigned long int index) { return position[index]; }
+char& Board::accessBoard(int index) {
+  auto idx{static_cast<unsigned long int>(index)};
+  return accessBoard(idx);
+}
+char Board::accessBoard(int index) const {
+  auto idx{static_cast<unsigned long int>(index)};
+  return position[idx];
+};
+
 void Board::makeMove(Move move) {
-  char& currentPiece{position[static_cast<unsigned long int>(move.current)]};
-  char& targetPiece{position[static_cast<unsigned long int>(move.target)]};
+  char& currentPiece{accessBoard(move.current)};
+  char& targetPiece{accessBoard(move.target)};
 
-  //  SPECIAL MOVES
-
+  // SPECIAL MOVES
   // En Passant
   {
     bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
@@ -17,7 +26,7 @@ void Board::makeMove(Move move) {
     if (isPawn && move.target == enPassant) {
       int x{static_cast<int>(move.target) % 8};
       int y{static_cast<int>(move.current) / 8};
-      position[static_cast<unsigned long int>(x + y * 8)] = 0;
+      accessBoard(x + y * 8) = 0;
     }
     enPassant = 64;
     if (isPawn) {
@@ -34,10 +43,12 @@ void Board::makeMove(Move move) {
     if (currentPiece == 'p' && y == 7) {
       targetPiece = 'q';
       currentPiece = 0;
+      whiteToMove = !whiteToMove;
       return;
     } else if (currentPiece == 'P' && y == 0) {
       targetPiece = 'Q';
       currentPiece = 0;
+      whiteToMove = !whiteToMove;
       return;
     }
   }
@@ -111,19 +122,18 @@ void Board::makeMove(Move move) {
           static_cast<char>(static_cast<int>(move.target - move.current) / 2)};
 
       for (int i{1}; i <= 2; i++) {
-        unsigned long int neighbourSquare{
-            static_cast<unsigned long int>(move.target + step * i)};
-        char neighbourPiece{position[neighbourSquare]};
+        int neighbourSquare{static_cast<int>(move.target + step * i)};
+        char neighbourPiece{accessBoard(neighbourSquare)};
         if ((neighbourPiece == 'r') || (neighbourPiece == 'R')) {
-          position[static_cast<unsigned long int>(move.target - step)] =
-              neighbourPiece;
-          position[neighbourSquare] = 0;
+          accessBoard(move.target - step) = neighbourPiece;
+          accessBoard(neighbourSquare) = 0;
           break;
         }
       }
 
       targetPiece = currentPiece;
       currentPiece = 0;
+      whiteToMove = !whiteToMove;
       return;
     }
   }
@@ -131,24 +141,23 @@ void Board::makeMove(Move move) {
   // if no special moves occured
   targetPiece = currentPiece;
   currentPiece = 0;
+
+  whiteToMove = !whiteToMove;
 }
 
 bool isWhite(int index, const Board& board) {
-  int i{
-      static_cast<int>(board.position[static_cast<unsigned long int>(index)])};
+  int i{static_cast<int>(board.accessBoard(index))};
   return (i >= 65 && i <= 90);  // ASCII values for uppercase letters
 }
 
-bool sameColor(int index_a, int index_b, const Board& board) {
-  return ((isWhite(index_a, board) == isWhite(index_b, board)) &&
-          board.position[static_cast<unsigned long int>(index_a)] != 0 &&
-          board.position[static_cast<unsigned long int>(index_b)] != 0);
+bool sameColor(int indexA, int indexB, const Board& board) {
+  return ((isWhite(indexA, board) == isWhite(indexB, board)) &&
+          board.accessBoard(indexA) != 0 && board.accessBoard(indexB) != 0);
 }
 
-bool oppositeColor(int index_a, int index_b, const Board& board) {
-  return ((isWhite(index_a, board) != isWhite(index_b, board)) &&
-          board.position[static_cast<unsigned long int>(index_a)] != 0 &&
-          board.position[static_cast<unsigned long int>(index_b)] != 0);
+bool oppositeColor(int indexA, int indexB, const Board& board) {
+  return ((isWhite(indexA, board) != isWhite(indexB, board)) &&
+          board.accessBoard(indexA) != 0 && board.accessBoard(indexB) != 0);
 }  // necessary because !sameColor() doesn't consider empty squares
 
 std::array<int, 2> checkLimits(int currentSquare, int offset) {
@@ -243,47 +252,33 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
 
   if (white) {
     if (board.whiteCastling[0]) {
-      bool freeRank{
-          board.position[static_cast<unsigned long int>(currentSquare - 1)] ==
-              0 &&
-          board.position[static_cast<unsigned long int>(currentSquare - 2)] ==
-              0};
+      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
+                    board.accessBoard(currentSquare - 2) == 0};
       if (freeRank) {
         moves.push_back(Move{static_cast<char>(currentSquare),
                              static_cast<char>(currentSquare - 2)});
       }
     }
     if (board.whiteCastling[1]) {
-      bool freeRank{
-          board.position[static_cast<unsigned long int>(currentSquare + 1)] ==
-              0 &&
-          board.position[static_cast<unsigned long int>(currentSquare + 2)] ==
-              0};
+      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
+                    board.accessBoard(currentSquare + 2) == 0};
       if (freeRank) {
         moves.push_back(Move{static_cast<char>(currentSquare),
                              static_cast<char>(currentSquare + 2)});
       }
     }
-  }
-
-  if (!white) {
+  } else {
     if (board.blackCastling[0]) {
-      bool freeRank{
-          board.position[static_cast<unsigned long int>(currentSquare + 1)] ==
-              0 &&
-          board.position[static_cast<unsigned long int>(currentSquare + 2)] ==
-              0};
+      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
+                    board.accessBoard(currentSquare + 2) == 0};
       if (freeRank) {
         moves.push_back(Move{static_cast<char>(currentSquare),
                              static_cast<char>(currentSquare + 2)});
       }
     }
     if (board.blackCastling[1]) {
-      bool freeRank{
-          board.position[static_cast<unsigned long int>(currentSquare - 1)] ==
-              0 &&
-          board.position[static_cast<unsigned long int>(currentSquare - 2)] ==
-              0};
+      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
+                    board.accessBoard(currentSquare - 2) == 0};
       if (freeRank) {
         moves.push_back(Move{static_cast<char>(currentSquare),
                              static_cast<char>(currentSquare - 2)});
@@ -293,7 +288,7 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
 }
 
 void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
-                    int currentSquare, const std::array<Location, 8>& offsets) {
+                    int currentSquare, const std::array<Delta, 8>& offsets) {
   int x{currentSquare % 8};
   int y{currentSquare / 8};
 
@@ -307,15 +302,13 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
     }
   }
 
-  if (std::tolower(
-          board.position[static_cast<unsigned long int>(currentSquare)]) ==
-      'k') {
+  if (std::tolower(board.accessBoard(currentSquare)) == 'k') {
     castle(board, moves, currentSquare);
   }
 }
 
 void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
-              const std::array<Location, 4>& offsets) {
+              const std::array<Delta, 4>& offsets) {
   int x{currentSquare % 8};
   int y{currentSquare / 8};
 
@@ -324,8 +317,7 @@ void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
 
   char advanceSquare{static_cast<char>((y + (offsets[0]).y) * 8 + x)};
   // access the square in front of the pawn
-  bool canAdvance = static_cast<int>(
-      board.position[static_cast<unsigned long int>(advanceSquare)] == 0);
+  bool canAdvance = static_cast<int>(board.accessBoard(advanceSquare) == 0);
   // is that square empty
 
   for (auto offset : offsets) {
@@ -355,44 +347,50 @@ void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
 }
 
 void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
+  char symbol{board.accessBoard(currentSquare)};
   char currentPiece{static_cast<char>(
-      std::tolower(board.position[static_cast<unsigned long int>(
-          currentSquare)]))}; /* std::tolower() returns an integer, which is
+      std::tolower(symbol))}; /* std::tolower() returns an integer, which is
                                * converted to char; movegen is symmetrical for
                                * black and white */
-  switch (currentPiece) {
-    case 'p':
-      if (isWhite(currentSquare, board)) {
-        pawnLoop(board, moves, currentSquare, offsets::whitePawn);
-      } else {
-        pawnLoop(board, moves, currentSquare, offsets::blackPawn);
-      }
-      // modify board.enPassant if necessary
-      break;
 
-    case 'n':
-      nonSlidingLoop(board, moves, currentSquare, offsets::knight);
-      break;
+  if ((currentPiece != symbol && board.whiteToMove) ||
+      (currentPiece == symbol && !board.whiteToMove)) {
+    // 0 is ignored anyway as there's no case inside
+    // the switch
+    switch (currentPiece) {
+      case 'p':
+        if (isWhite(currentSquare, board)) {
+          pawnLoop(board, moves, currentSquare, offsets::whitePawn);
+        } else {
+          pawnLoop(board, moves, currentSquare, offsets::blackPawn);
+        }
+        // modify board.enPassant if necessary
+        break;
 
-    case 'b':
-      slidingLoop(board, moves, currentSquare, offsets::bishop);
-      break;
+      case 'n':
+        nonSlidingLoop(board, moves, currentSquare, offsets::knight);
+        break;
 
-    case 'r':
-      slidingLoop(board, moves, currentSquare, offsets::rook);
-      break;
+      case 'b':
+        slidingLoop(board, moves, currentSquare, offsets::bishop);
+        break;
 
-    case 'q':
-      slidingLoop(board, moves, currentSquare, offsets::bishop);
-      slidingLoop(board, moves, currentSquare, offsets::rook);
-      break;
+      case 'r':
+        slidingLoop(board, moves, currentSquare, offsets::rook);
+        break;
 
-    case 'k':
-      nonSlidingLoop(board, moves, currentSquare, offsets::king);
-      break;
+      case 'q':
+        slidingLoop(board, moves, currentSquare, offsets::bishop);
+        slidingLoop(board, moves, currentSquare, offsets::rook);
+        break;
 
-    default:
-      break;
+      case 'k':
+        nonSlidingLoop(board, moves, currentSquare, offsets::king);
+        break;
+
+      default:
+        break;
+    }
   }
 }
 }  // namespace core

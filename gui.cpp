@@ -61,7 +61,7 @@ int main() {
       char pressed = gfx::detectSquare(location.x, location.y);
 
       if (!isMoving) {
-        if (board.position[static_cast<long unsigned int>(pressed)] != 0) {
+        if (board.accessBoard(pressed) != 0) {
           move.current = pressed;
 
           moves.clear();
@@ -89,7 +89,7 @@ int main() {
         } else {
           moves.clear();
 
-          if (board.position[static_cast<long unsigned int>(pressed)] != 0) {
+          if (board.accessBoard(pressed) != 0) {
             move.current = pressed;
             moves.clear();
             core::generateMoves(board, moves, move.current);
