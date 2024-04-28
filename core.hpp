@@ -67,28 +67,26 @@ struct Board {
   void makeMove(Move);
 };
 
-bool isWhite(int index, const Board& board);
+bool isWhite(int, const Board&);
 
-bool sameColor(int index_a, int index_b, const Board& board);
+bool sameColor(int, int, const Board&);
 
-bool oppositeColor(int index_a, int index_b, const Board& board);
+bool oppositeColor(int, int, const Board&);
 
-std::array<int, 2> checkLimits(int currentSquare, int offset);
+std::array<int, 2> checkLimits(int, int);
 
-void movesInLimits(const Board& board, std::vector<Move>& moves,
-                   const std::array<int, 2>& limits, int currentSquare,
-                   int offset);
+void movesInLimits(const Board&, std::vector<Move>&, const std::array<int, 2>&,
+                   int, int);
 
-void slidingLoop(const Board& board, std::vector<Move>& moves,
-                 int currentSquare, const std::array<int, 4>& offsets);
+void slidingLoop(const Board&, std::vector<Move>&, int,
+                 const std::array<int, 4>&);
 
-void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
-                    int currentSquare, const std::array<Location, 8>& offsets);
+void nonSlidingLoop(const Board&, std::vector<Move>&, int,
+                    const std::array<Location, 8>&);
 
-void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
-              const std::array<Location, 4>& offsets);
+void pawnLoop(Board&, std::vector<Move>&, int, const std::array<Location, 4>&);
 
-void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare);
+void generateMoves(Board&, std::vector<Move>&, int);
 
 }  // namespace core
 
