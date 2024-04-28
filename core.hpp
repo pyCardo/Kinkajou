@@ -59,7 +59,7 @@ struct Board {
   //                               P, P, P, P, P, P, P, P,  //
   //                               R, N, B, Q, K, B, N, R};
 
-  std::array<bool, 2> whiteCastling{true, true};
+  std::array<bool, 2> whiteCastling{true, true}; // to be read: left, right, according to player view
   std::array<bool, 2> blackCastling{true, true};
   char enPassant{64};
   // is en passant available? initialized to 64 because it's not a valid index
@@ -80,6 +80,8 @@ void movesInLimits(const Board&, std::vector<Move>&, const std::array<int, 2>&,
 
 void slidingLoop(const Board&, std::vector<Move>&, int,
                  const std::array<int, 4>&);
+
+void castle(const Board&, std::vector<Move>&, int);
 
 void nonSlidingLoop(const Board&, std::vector<Move>&, int,
                     const std::array<Location, 8>&);

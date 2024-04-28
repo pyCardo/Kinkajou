@@ -29,3 +29,4 @@ Git will ignore the following folders/files:
 ## Issues
 - ASan memory leaks
 - Low quality pngs
+- Not a "real" issue, but so far it's possible to castle even if in-between squares are attacked. It will be partly solved once the legal moves filter is implemented, removing the possibility to castle if the king's landing house is attacked. Still, core::castle() (in movegen.cpp) should be updated to prevent castling if an intermidiate house on the king's journey is attacked. The only viable seems to be similar to the legal move filter check. 

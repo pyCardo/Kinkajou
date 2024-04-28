@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "core.hpp"
 
 namespace core {
@@ -6,28 +8,128 @@ void Board::makeMove(Move move) {
   char& currentPiece{position[static_cast<unsigned long int>(move.current)]};
   char& targetPiece{position[static_cast<unsigned long int>(move.target)]};
 
-  bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
+  //  SPECIAL MOVES
 
-  if (isPawn && move.target == enPassant) {
-    int x{static_cast<int>(move.target) % 8};
-    int y{static_cast<int>(move.current) / 8};
-    position[static_cast<unsigned long int>(x + y * 8)] = 0;
-  }
-  enPassant = 64;
-  if (isPawn) {
-    if (std::abs(static_cast<int>(move.current - move.target))) {
-      enPassant =
-          static_cast<char>(static_cast<int>(move.current + move.target) / 2);
+  // En Passant
+  {
+    bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
+
+    if (isPawn && move.target == enPassant) {
+      int x{static_cast<int>(move.target) % 8};
+      int y{static_cast<int>(move.current) / 8};
+      position[static_cast<unsigned long int>(x + y * 8)] = 0;
+    }
+    enPassant = 64;
+    if (isPawn) {
+      if (std::abs(static_cast<int>(move.current - move.target))) {
+        enPassant =
+            static_cast<char>(static_cast<int>(move.current + move.target) / 2);
+      }
     }
   }
-  int y = move.target / 8;
-  if (currentPiece == 'p' && y == 7) {
-    targetPiece = 'q';
-  } else if (currentPiece == 'P' && y == 0) {
-    targetPiece = 'Q';
-  } else {
-    targetPiece = currentPiece;
+
+  // Promotion
+  {
+    int y = move.target / 8;
+    if (currentPiece == 'p' && y == 7) {
+      targetPiece = 'q';
+      currentPiece = 0;
+      return;
+    } else if (currentPiece == 'P' && y == 0) {
+      targetPiece = 'Q';
+      currentPiece = 0;
+      return;
+    }
   }
+
+  // Castling
+  {
+    // update castling rights
+    switch (move.current) {
+      // moving a Rook
+      case 0:
+        blackCastling[1] = false;
+        break;
+
+      case 7:
+        blackCastling[0] = false;
+        break;
+
+      case 56:
+        whiteCastling[0] = false;
+        break;
+
+      case 63:
+        whiteCastling[1] = false;
+        break;
+
+      // moving a King
+      case 4:
+        blackCastling[0] = false;
+        blackCastling[1] = false;
+        break;
+
+      case 60:
+        whiteCastling[0] = false;
+        whiteCastling[1] = false;
+        break;
+
+      default:
+        break;
+    }
+
+    switch (move.target) {
+      // a Rook is captured
+      case 0:
+        blackCastling[1] = false;
+        break;
+
+      case 7:
+        blackCastling[0] = false;
+        break;
+
+      case 56:
+        whiteCastling[0] = false;
+        break;
+
+      case 63:
+        whiteCastling[1] = false;
+        break;
+
+      default:
+        break;
+    }
+
+    // the selected move is castling
+
+    bool isKing{currentPiece == 'k' || currentPiece == 'K'};
+    bool isCastling{isKing && (std::abs(move.target - move.current) == 2)};
+
+    if (isCastling) {
+      // find rook
+      char step{
+          static_cast<char>(static_cast<int>(move.target - move.current) / 2)};
+
+      for (int i{1}; i <= 2; i++) {
+        unsigned long int neighbourSquare{
+            static_cast<unsigned long int>(move.target + step * i)};
+        char neighbourPiece{position[neighbourSquare]};
+        if ((neighbourPiece == 'r') || (neighbourPiece == 'R')) {
+          position[static_cast<unsigned long int>(move.target - step)] =
+              neighbourPiece;
+          position[neighbourSquare] = 0;
+          break;
+        }
+      }
+
+      targetPiece = currentPiece;
+      currentPiece = 0;
+      return;
+    }
+  }
+
+  // if no special moves occured
+  targetPiece = currentPiece;
   currentPiece = 0;
 }
 
@@ -136,6 +238,60 @@ void slidingLoop(const Board& board, std::vector<Move>& moves,
   }
 }
 
+void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
+  bool white{isWhite(currentSquare, board)};
+
+  if (white) {
+    if (board.whiteCastling[0]) {
+      bool freeRank{
+          board.position[static_cast<unsigned long int>(currentSquare - 1)] ==
+              0 &&
+          board.position[static_cast<unsigned long int>(currentSquare - 2)] ==
+              0};
+      if (freeRank) {
+        moves.push_back(Move{static_cast<char>(currentSquare),
+                             static_cast<char>(currentSquare - 2)});
+      }
+    }
+    if (board.whiteCastling[1]) {
+      bool freeRank{
+          board.position[static_cast<unsigned long int>(currentSquare + 1)] ==
+              0 &&
+          board.position[static_cast<unsigned long int>(currentSquare + 2)] ==
+              0};
+      if (freeRank) {
+        moves.push_back(Move{static_cast<char>(currentSquare),
+                             static_cast<char>(currentSquare + 2)});
+      }
+    }
+  }
+
+  if (!white) {
+    if (board.blackCastling[0]) {
+      bool freeRank{
+          board.position[static_cast<unsigned long int>(currentSquare + 1)] ==
+              0 &&
+          board.position[static_cast<unsigned long int>(currentSquare + 2)] ==
+              0};
+      if (freeRank) {
+        moves.push_back(Move{static_cast<char>(currentSquare),
+                             static_cast<char>(currentSquare + 2)});
+      }
+    }
+    if (board.blackCastling[1]) {
+      bool freeRank{
+          board.position[static_cast<unsigned long int>(currentSquare - 1)] ==
+              0 &&
+          board.position[static_cast<unsigned long int>(currentSquare - 2)] ==
+              0};
+      if (freeRank) {
+        moves.push_back(Move{static_cast<char>(currentSquare),
+                             static_cast<char>(currentSquare - 2)});
+      }
+    }
+  }
+}
+
 void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
                     int currentSquare, const std::array<Location, 8>& offsets) {
   int x{currentSquare % 8};
@@ -149,6 +305,12 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
     if (xLimit && yLimit && !sameColor(currentSquare, targetSquare, board)) {
       moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
     }
+  }
+
+  if (std::tolower(
+          board.position[static_cast<unsigned long int>(currentSquare)]) ==
+      'k') {
+    castle(board, moves, currentSquare);
   }
 }
 
