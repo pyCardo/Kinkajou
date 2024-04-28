@@ -1,7 +1,6 @@
 #include <cassert>
 #include <iostream>
 
-#include "core.hpp"
 #include "gfx.hpp"
 
 int main() {

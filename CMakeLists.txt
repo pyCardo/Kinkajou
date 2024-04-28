@@ -24,7 +24,7 @@ string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address,undefined -fno-o
 #   le dipendenze vengono identificate automaticamente
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 
-add_executable(game gui.cpp)
+add_executable(game gui.cpp movegen.cpp)
 target_link_libraries(game PRIVATE sfml-graphics sfml-system sfml-window)
 
 # se il testing e' abilitato...
