@@ -19,40 +19,7 @@ void Board::makeMove(Move move) {
   char& targetPiece{accessBoard(move.target)};
 
   // SPECIAL MOVES
-  // En Passant
-  {
-    bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
-
-    if (isPawn && move.target == enPassant) {
-      int x{static_cast<int>(move.target) % 8};
-      int y{static_cast<int>(move.current) / 8};
-      accessBoard(x + y * 8) = 0;
-    }
-    enPassant = 64;
-    if (isPawn) {
-      if (std::abs(static_cast<int>(move.current - move.target))) {
-        enPassant =
-            static_cast<char>(static_cast<int>(move.current + move.target) / 2);
-      }
-    }
-  }
-
-  // Promotion
-  {
-    int y = move.target / 8;
-    if (currentPiece == 'p' && y == 7) {
-      targetPiece = 'q';
-      currentPiece = 0;
-      whiteToMove = !whiteToMove;
-      return;
-    } else if (currentPiece == 'P' && y == 0) {
-      targetPiece = 'Q';
-      currentPiece = 0;
-      whiteToMove = !whiteToMove;
-      return;
-    }
-  }
-
+ 
   // Castling
   {
     // update castling rights
@@ -137,6 +104,41 @@ void Board::makeMove(Move move) {
       return;
     }
   }
+
+  // En Passant
+  {
+    bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
+
+    if (isPawn && move.target == enPassant) {
+      int x{static_cast<int>(move.target) % 8};
+      int y{static_cast<int>(move.current) / 8};
+      accessBoard(x + y * 8) = 0;
+    }
+    enPassant = 64;
+    if (isPawn) {
+      if (std::abs(static_cast<int>(move.current - move.target))) {
+        enPassant =
+            static_cast<char>(static_cast<int>(move.current + move.target) / 2);
+      }
+    }
+  }
+
+  // Promotion
+  {
+    int y = move.target / 8;
+    if (currentPiece == 'p' && y == 7) {
+      targetPiece = 'q';
+      currentPiece = 0;
+      whiteToMove = !whiteToMove;
+      return;
+    } else if (currentPiece == 'P' && y == 0) {
+      targetPiece = 'Q';
+      currentPiece = 0;
+      whiteToMove = !whiteToMove;
+      return;
+    }
+  }
+
 
   // if no special moves occured
   targetPiece = currentPiece;
