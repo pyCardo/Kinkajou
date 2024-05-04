@@ -26,6 +26,9 @@ Git will ignore the following folders/files:
 - `build/`
 - `*.out` and `*.exe`
 
+### Ideas
+- Validation of legal moves: it may be possible to verify if a move is legal by generating all possible Rook, Bishop and Night moves starting from the King's position. If on any of those landing squares the corresponding piece is found, a check is detected.
+
 ## Issues
 - ASan memory leaks
 - Low quality pngs
