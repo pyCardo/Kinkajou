@@ -19,7 +19,7 @@ void Board::makeMove(Move move) {
   char& targetPiece{accessBoard(move.target)};
 
   // SPECIAL MOVES
- 
+
   // Castling
   {
     // update castling rights
@@ -97,11 +97,6 @@ void Board::makeMove(Move move) {
           break;
         }
       }
-
-      targetPiece = currentPiece;
-      currentPiece = 0;
-      whiteToMove = !whiteToMove;
-      return;
     }
   }
 
@@ -109,40 +104,38 @@ void Board::makeMove(Move move) {
   {
     bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
 
+    // if selected move is en passant capture
     if (isPawn && move.target == enPassant) {
-      int x{static_cast<int>(move.target) % 8};
-      int y{static_cast<int>(move.current) / 8};
+      int x{static_cast<int>(move.target) %
+            8};  // x coordinate of the pawn that will be captured by en passant
+      int y{static_cast<int>(move.current) /
+            8};  // y coordinate of the pawn that will be captured by en passant
       accessBoard(x + y * 8) = 0;
     }
-    enPassant = 64;
+    enPassant = 64; // en passant is no longer available
+
+    // if selected move is double pawn push, enable en passant for next move
     if (isPawn) {
-      if (std::abs(static_cast<int>(move.current - move.target))) {
+      if (std::abs(static_cast<int>(move.current - move.target)) == 16) {
         enPassant =
             static_cast<char>(static_cast<int>(move.current + move.target) / 2);
       }
     }
   }
 
+  // if no special moves occured
+  targetPiece = currentPiece;
+  currentPiece = 0;
+
   // Promotion
   {
     int y = move.target / 8;
     if (currentPiece == 'p' && y == 7) {
       targetPiece = 'q';
-      currentPiece = 0;
-      whiteToMove = !whiteToMove;
-      return;
     } else if (currentPiece == 'P' && y == 0) {
       targetPiece = 'Q';
-      currentPiece = 0;
-      whiteToMove = !whiteToMove;
-      return;
     }
   }
-
-
-  // if no special moves occured
-  targetPiece = currentPiece;
-  currentPiece = 0;
 
   whiteToMove = !whiteToMove;
 }
