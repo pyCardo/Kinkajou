@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
+#include <filesystem>
 #include <string>
 
 #include "core.hpp"
@@ -14,7 +15,7 @@ auto const COLOR_DARK = sf::Color(180, 136, 99, 255);
 auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
 auto const COLOR_HIGHLIGHT_DARK = sf::Color(211, 92, 71, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 800;
+int const WINDOW_DIMENSION = 700;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
 int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
@@ -24,15 +25,21 @@ float const SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
 
 class Piece {
   char c_;
-  std::string path_;
+  std::filesystem::path path_;
   sf::Texture texture_;
 
  public:
   sf::Sprite sprite;
   Piece(char id) : c_{id} {
-    path_ = "pieces/" + std::string(1, c_) +
-            ".png";  // andrebbe rimossa la dipendenza dalla working directory
-    texture_.loadFromFile(path_);
+    path_.assign("pieces/");
+    path_ /= std::string(1, c_) + ".png";
+
+    if (!std::filesystem::exists(path_)) {
+      throw std::filesystem::filesystem_error(
+          "Can't load texture", path_,
+          std::make_error_code(std::errc::no_such_file_or_directory));
+    }
+
     sprite.setTexture(texture_);
     sprite.setScale(SCALE_FACTOR, SCALE_FACTOR);
   }
