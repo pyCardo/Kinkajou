@@ -40,6 +40,7 @@ class Piece {
           std::make_error_code(std::errc::no_such_file_or_directory));
     }
 
+    texture_.loadFromFile(path_.native());
     sprite.setTexture(texture_);
     sprite.setScale(SCALE_FACTOR, SCALE_FACTOR);
   }
