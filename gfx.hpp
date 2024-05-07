@@ -64,11 +64,7 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
     int x = static_cast<int>(i % 8);
     int y = static_cast<int>(i / 8);
 
-    if ((x + y) % 2 == 0) {  // first square starts from 0
-      spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
-    } else {
-      spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
-    }
+    spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
     window.draw(square);
     // memory leak risolto se le linee "window.draw(square);" e
     // "charToPiece.at(id).toScreen(window, x, y);" sono rimosse
