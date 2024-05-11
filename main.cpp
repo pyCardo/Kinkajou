@@ -45,19 +45,37 @@ int main() {
     square.setSize(sf::Vector2f(gfx::SQUARE_SIZE_F, gfx::SQUARE_SIZE_F));
 
     bool isMoving{false};
-    bool isClicking{false};
+    bool notClicking{false};
+    bool reversed{false};
 
     while (window.isOpen()) {
       // event handling
       sf::Event event;
       while (window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed) {
-          window.close();
+        switch (event.type) {
+          case sf::Event::Closed:
+            window.close();
+            break;
+
+          case sf::Event::KeyPressed:
+            switch (event.key.code) {
+              case sf::Keyboard::F:
+                reversed = !reversed;
+                break;
+                // real time input ->
+                // sf::Keyboard::isKeyPressed(sf::Keyboard::Left)
+
+              default:
+                break;
+            }
+
+          default:
+            break;
         }
       }
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && isClicking) {
-        isClicking = false;
+      if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && notClicking) {
+        notClicking = false;
         auto location = sf::Mouse::getPosition(window);
         char pressed = gfx::detectSquare(location.x, location.y);
 
@@ -104,10 +122,10 @@ int main() {
           }
         }
       } else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        isClicking = true;
+        notClicking = true;
       }  // manually handling mouse button release
 
-      gfx::displayBoard(board, square, window, colorMap, charToPiece);
+      gfx::displayBoard(board, square, window, colorMap, charToPiece, reversed);
       window.display();
     }
   } catch (std::filesystem::filesystem_error const& e) {

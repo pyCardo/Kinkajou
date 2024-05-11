@@ -70,6 +70,7 @@ struct Board {
 
   char& accessBoard(unsigned long int);
   char& accessBoard(int);
+  char accessBoard(unsigned long int) const;
   char accessBoard(int) const;
   // overloaded for conversion purposes
 

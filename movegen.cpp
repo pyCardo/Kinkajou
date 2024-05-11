@@ -9,9 +9,12 @@ char& Board::accessBoard(int index) {
   auto idx{static_cast<unsigned long int>(index)};
   return accessBoard(idx);
 }
+char Board::accessBoard(unsigned long int index) const {
+  return position[index];
+}
 char Board::accessBoard(int index) const {
   auto idx{static_cast<unsigned long int>(index)};
-  return position[idx];
+  return accessBoard(idx);
 };
 
 void Board::makeMove(Move move) {
@@ -112,7 +115,7 @@ void Board::makeMove(Move move) {
             8};  // y coordinate of the pawn that will be captured by en passant
       accessBoard(x + y * 8) = 0;
     }
-    enPassant = 64; // en passant is no longer available
+    enPassant = 64;  // en passant is no longer available
 
     // if selected move is double pawn push, enable en passant for next move
     if (isPawn) {
