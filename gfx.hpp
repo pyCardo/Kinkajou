@@ -65,7 +65,7 @@ void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
 void displayBoard(const core::Board& board, sf::RectangleShape& square,
                   sf::RenderWindow& window,
                   const std::array<sf::Color, 64>& colorMap,
-                  std::unordered_map<char, Piece>& charToPiece, bool reversed) {
+                  std::unordered_map<char, Piece>& charToPiece) {
   window.clear();
 
   for (unsigned long int i{0}; i < BOARD_SIZE; ++i) {

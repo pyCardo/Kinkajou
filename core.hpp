@@ -59,6 +59,8 @@ struct Board {
   //                               P, P, P, P, P, P, P, P,  //
   //                               R, N, B, Q, K, B, N, R};
 
+  char whiteKing{4};
+  char blackKing{60};
   std::array<bool, 2> whiteCastling{true, true};
   std::array<bool, 2> blackCastling{true, true};
   // to be read: left, right, according to player view
@@ -96,7 +98,10 @@ void castle(const Board&, std::vector<Move>&, int);
 void nonSlidingLoop(const Board&, std::vector<Move>&, int,
                     const std::array<Delta, 8>&);
 
-void pawnLoop(Board&, std::vector<Move>&, int, const std::array<Delta, 4>&);
+void pawnLoop(const Board&, std::vector<Move>&, int,
+              const std::array<Delta, 4>&);
+
+bool isCheck(const Board&);
 
 void generateMoves(Board&, std::vector<Move>&, int);
 

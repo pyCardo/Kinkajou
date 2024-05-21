@@ -125,7 +125,7 @@ int main() {
         notClicking = true;
       }  // manually handling mouse button release
 
-      gfx::displayBoard(board, square, window, colorMap, charToPiece, reversed);
+      gfx::displayBoard(board, square, window, colorMap, charToPiece);
       window.display();
     }
   } catch (std::filesystem::filesystem_error const& e) {

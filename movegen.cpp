@@ -21,6 +21,13 @@ void Board::makeMove(Move move) {
   char& currentPiece{accessBoard(move.current)};
   char& targetPiece{accessBoard(move.target)};
 
+  if (currentPiece == 'k') {
+    blackKing == move.target;
+  }
+  if (currentPiece == 'K') {
+    whiteKing == move.target;
+  }
+
   // SPECIAL MOVES
 
   // Castling
@@ -126,10 +133,6 @@ void Board::makeMove(Move move) {
     }
   }
 
-  // if no special moves occured
-  targetPiece = currentPiece;
-  currentPiece = 0;
-
   // Promotion
   {
     int y = move.target / 8;
@@ -140,6 +143,12 @@ void Board::makeMove(Move move) {
     }
   }
 
+  // if no special moves occured
+  if (targetPiece != 'q' && targetPiece != 'Q') {  // not promoting
+    targetPiece = currentPiece;
+  }
+
+  currentPiece = 0;
   whiteToMove = !whiteToMove;
 }
 
@@ -305,7 +314,7 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
   }
 }
 
-void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
+void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
               const std::array<Delta, 4>& offsets) {
   int x{currentSquare % 8};
   int y{currentSquare / 8};
@@ -343,6 +352,8 @@ void pawnLoop(Board& board, std::vector<Move>& moves, int currentSquare,
     }
   }
 }
+
+bool isCheck(const Board& board) {}
 
 void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
   char symbol{board.accessBoard(currentSquare)};
