@@ -6,6 +6,7 @@
 int main() {
   try {
     core::Board board;
+    core::Board pseudoBoard;
     core::Move move;
     std::vector<core::Move> moves;
 
