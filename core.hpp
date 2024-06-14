@@ -101,7 +101,7 @@ void nonSlidingLoop(const Board&, std::vector<Move>&, int,
 void pawnLoop(const Board&, std::vector<Move>&, int,
               const std::array<Delta, 4>&);
 
-bool isCheck(const Board&);
+bool isCheck(Board&);
 
 void generateMoves(Board&, std::vector<Move>&, int);
 

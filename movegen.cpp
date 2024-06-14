@@ -233,10 +233,7 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
     if (sameColor(currentSquare, targetSquare, board)) {
       break;
     }
-
-    // copio pseudoBoard
-    // faccio mossa su pB
-    // isCheck(pB)
+    
     // here we should verify if the king is in check, and only if not push_back
     moves.push_back(Move{static_cast<char>(currentSquare),
                          static_cast<char>(targetSquare)});
@@ -437,7 +434,60 @@ bool isCheck(Board& board) {
     }
   }
 
-  // pawn and king missing
+  for (auto offset : core::offsets::king) {
+    int x{king % 8};
+    int y{king / 8};
+
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
+
+    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
+      auto enemyPiece =
+          static_cast<char>(std::tolower(board.accessBoard(enemy)));
+      if (enemyPiece == 'k') {
+        return true;
+      }
+    }
+  }
+
+  for (auto offset : core::offsets::knight) {
+    int x{king % 8};
+    int y{king / 8};
+
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
+
+    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
+      auto enemyPiece =
+          static_cast<char>(std::tolower(board.accessBoard(enemy)));
+      if (enemyPiece == 'n') {
+        return true;
+      }
+    }
+  }
+  
+  const std::array<Delta, 4> pawnOffsets = board.whiteToMove ? core::offsets::whitePawn : core::offsets::blackPawn;
+
+  for (auto offset : pawnOffsets) {
+    int x{king % 8};
+    int y{king / 8};
+
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
+
+    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
+      auto enemyPiece =
+          static_cast<char>(std::tolower(board.accessBoard(enemy)));
+      if (enemyPiece == 'p') {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
