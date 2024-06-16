@@ -26,11 +26,18 @@ Git will ignore the following folders/files:
 - `build/`
 - `*.out` and `*.exe`
 
-### What's missing?
-- Checkmate banner/warning
+## Tests
+Testing related resources:\
+https://www.chessprogramming.org/Perft
+https://www.chessprogramming.org/Perft_Results
+
+## What's missing?
+- Checkmate and stalemate banner/warning
+- Draws by repetition, fifty-move rule, insufficient material
 - New game interface
 - Board flip option with F key
 - Count legal moves at fixed depth and test with doctest.h
+- FEN reader
 
 ## Issues
 - ASan memory leaks

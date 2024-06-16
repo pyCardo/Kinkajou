@@ -9,18 +9,18 @@ int main() {
     core::Move move;
     std::vector<core::Move> moves;
 
-    gfx::Piece b('b');
-    gfx::Piece B('B');
-    gfx::Piece k('k');
-    gfx::Piece K('K');
-    gfx::Piece n('n');
-    gfx::Piece N('N');
-    gfx::Piece p('p');
-    gfx::Piece P('P');
-    gfx::Piece q('q');
-    gfx::Piece Q('Q');
-    gfx::Piece r('r');
-    gfx::Piece R('R');
+    gfx::Piece b("bB");
+    gfx::Piece B("wB");
+    gfx::Piece k("bK");
+    gfx::Piece K("wK");
+    gfx::Piece n("bN");
+    gfx::Piece N("wN");
+    gfx::Piece p("bP");
+    gfx::Piece P("wP");
+    gfx::Piece q("bQ");
+    gfx::Piece Q("wQ");
+    gfx::Piece r("bR");
+    gfx::Piece R("wR");
 
     std::unordered_map<char, gfx::Piece> charToPiece = {
         {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
@@ -115,6 +115,10 @@ int main() {
 
               for (auto possibleMove : moves) {
                 gfx::highlightSquare(colorMap, possibleMove.target);
+              }
+              if (!moves.empty()) {
+                colorMap[static_cast<u32>(pressed)] =
+                    gfx::COLOR_HIGHLIGHT_SELECTED;
               }
 
               isMoving = true;

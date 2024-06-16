@@ -6,6 +6,9 @@
 #include <cmath>
 #include <vector>
 
+using u32 = unsigned long int;
+using u64 = unsigned long long int;
+
 namespace core {
 struct Delta {  // standing for "change"
   int x;
@@ -80,10 +83,11 @@ struct Board {
     whiteToMove = copy.whiteToMove;
     enPassant = copy.enPassant;
   }  // copy constructor
+  // add FEN constructor
 
-  char& accessBoard(unsigned long int);
+  char& accessBoard(u32);
   char& accessBoard(int);
-  char accessBoard(unsigned long int) const;
+  char accessBoard(u32) const;
   char accessBoard(int) const;
   // overloaded for conversion purposes
 
@@ -117,5 +121,11 @@ bool isCheck(Board&);
 void generateMoves(Board&, std::vector<Move>&, int);
 
 }  // namespace core
+
+namespace test {
+
+u64 perft(int, core::Board&);
+
+}
 
 #endif

@@ -4,16 +4,16 @@
 
 namespace core {
 
-char& Board::accessBoard(unsigned long int index) { return position[index]; }
+char& Board::accessBoard(u32 index) { return position[index]; }
 char& Board::accessBoard(int index) {
-  auto idx{static_cast<unsigned long int>(index)};
+  auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
 }
-char Board::accessBoard(unsigned long int index) const {
+char Board::accessBoard(u32 index) const {
   return position[index];
 }
 char Board::accessBoard(int index) const {
-  auto idx{static_cast<unsigned long int>(index)};
+  auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
 };
 
@@ -149,7 +149,7 @@ void Board::makeMove(Move move) {
   // if no special moves occured
   if (!promoted) {  // not promoting
     targetPiece = currentPiece;
-  } // WARNING! THIS MIGHT NOT BE CORRECT/COMPLETE
+  }  // WARNING! THIS MIGHT NOT BE CORRECT/COMPLETE
 
   currentPiece = 0;
   whiteToMove = !whiteToMove;
@@ -338,7 +338,7 @@ bool isCheck(Board& board) {
   const std::array<Delta, 4> pawnOffsets =
       board.whiteToMove ? core::offsets::blackPawn : core::offsets::whitePawn;
 
-  for (unsigned long int i{2}; i <= 3; ++i) {
+  for (u32 i{2}; i <= 3; ++i) {
     int x{king % 8};
     int y{king / 8};
 
@@ -562,3 +562,30 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
   }
 }
 }  // namespace core
+
+namespace test {
+u64 perft(int depth, core::Board& board) {
+  std::vector<core::Move> moves;
+  u64 nodes{0};
+
+  if (depth == 0) {
+    return 1;
+  }
+
+  for (int i{0}; i < 64; ++i) {
+    core::generateMoves(board, moves, i);
+  }
+
+  if (depth == 1){
+    return static_cast<u64>(moves.size());
+  }
+
+  for (auto move : moves) {
+    core::Board pseudoBoard(board);
+    pseudoBoard.makeMove(move);
+    nodes += perft(depth - 1, pseudoBoard);
+  }
+
+  return nodes;
+}  // this way you can also give it a different starting position
+}  // namespace test

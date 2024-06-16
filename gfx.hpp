@@ -10,12 +10,13 @@
 
 namespace gfx {
 
-auto const COLOR_LIGHT = sf::Color(240, 218, 181, 255);
-auto const COLOR_DARK = sf::Color(180, 136, 99, 255);
+auto const COLOR_LIGHT = sf::Color(241, 217, 192, 255);
+auto const COLOR_DARK = sf::Color(150, 100, 75, 255);
 auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
-auto const COLOR_HIGHLIGHT_DARK = sf::Color(211, 92, 71, 255);
+auto const COLOR_HIGHLIGHT_DARK = sf::Color(185, 65, 45, 255);
+auto const COLOR_HIGHLIGHT_SELECTED = sf::Color(237, 151, 52, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 700;
+int const WINDOW_DIMENSION = 800;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
 int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
@@ -30,9 +31,9 @@ class Piece {
 
  public:
   sf::Sprite sprite;
-  Piece(char id) : c_{id} {
+  Piece(std::string id){
     path_.assign("pieces/");
-    path_ /= std::string(1, c_) + ".png";
+    path_ /= id + ".png";
 
     if (!std::filesystem::exists(path_)) {
       throw std::filesystem::filesystem_error(
@@ -68,7 +69,7 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
                   std::unordered_map<char, Piece>& charToPiece) {
   window.clear();
 
-  for (unsigned long int i{0}; i < BOARD_SIZE; ++i) {
+  for (u32 i{0}; i < BOARD_SIZE; ++i) {
     int x = static_cast<int>(i % 8);
     int y = static_cast<int>(i / 8);
 
@@ -99,7 +100,7 @@ char detectSquare(int x, int y) {
 // }
 
 void setColorMap(std::array<sf::Color, 64>& colorMap) {
-  for (unsigned long int i{0}; i < BOARD_SIZE; ++i) {
+  for (u32 i{0}; i < BOARD_SIZE; ++i) {
     int x = static_cast<int>(i % 8);
     int y = static_cast<int>(i / 8);
 
@@ -112,10 +113,10 @@ void setColorMap(std::array<sf::Color, 64>& colorMap) {
 }
 
 void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
-  if (colorMap[static_cast<unsigned long int>(index)] == COLOR_DARK) {
-    colorMap[static_cast<unsigned long int>(index)] = COLOR_HIGHLIGHT_DARK;
-  } else if (colorMap[static_cast<unsigned long int>(index)] == COLOR_LIGHT) {
-    colorMap[static_cast<unsigned long int>(index)] = COLOR_HIGHLIGHT_LIGHT;
+  if (colorMap[static_cast<u32>(index)] == COLOR_DARK) {
+    colorMap[static_cast<u32>(index)] = COLOR_HIGHLIGHT_DARK;
+  } else if (colorMap[static_cast<u32>(index)] == COLOR_LIGHT) {
+    colorMap[static_cast<u32>(index)] = COLOR_HIGHLIGHT_LIGHT;
   }
 }
 
