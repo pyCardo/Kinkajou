@@ -22,10 +22,10 @@ void Board::makeMove(Move move) {
   char& targetPiece{accessBoard(move.target)};
 
   if (currentPiece == 'k') {
-    blackKing == move.target;
+    blackKing = move.target;
   }
   if (currentPiece == 'K') {
-    whiteKing == move.target;
+    whiteKing = move.target;
   }
 
   // SPECIAL MOVES
@@ -219,145 +219,11 @@ std::array<int, 2> checkLimits(int currentSquare, int offset) {
   return std::array<int, 2>{infLimit, supLimit};
 }
 
-void movesInLimits(const Board& board, std::vector<Move>& moves,
-                   const std::array<int, 2>& limits, int currentSquare,
-                   int offset) {
-  int targetSquare{currentSquare};
-  while (targetSquare >= limits[0] && targetSquare <= limits[1]) {
-    if (currentSquare == targetSquare) {
-      targetSquare += offset;
-      continue;
-    }
-
-    // break if target has the same color
-    if (sameColor(currentSquare, targetSquare, board)) {
-      break;
-    }
-    
-    // here we should verify if the king is in check, and only if not push_back
-    moves.push_back(Move{static_cast<char>(currentSquare),
-                         static_cast<char>(targetSquare)});
-
-    // break if target has different color
-    if (oppositeColor(currentSquare, targetSquare, board)) {
-      break;
-    }
-
-    targetSquare += offset;
-  }
-}
-
-void slidingLoop(const Board& board, std::vector<Move>& moves,
-                 int currentSquare, const std::array<int, 4>& offsets) {
-  for (auto offset : offsets) {
-    const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
-    movesInLimits(board, moves, limits, currentSquare, offset);
-  }
-}
-
-void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
-  bool white{isWhite(currentSquare, board)};
-
-  if (white) {
-    if (board.whiteCastling[0]) {
-      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
-                    board.accessBoard(currentSquare - 2) == 0};
-      if (freeRank) {
-        moves.push_back(Move{static_cast<char>(currentSquare),
-                             static_cast<char>(currentSquare - 2)});
-      }
-    }
-    if (board.whiteCastling[1]) {
-      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
-                    board.accessBoard(currentSquare + 2) == 0};
-      if (freeRank) {
-        moves.push_back(Move{static_cast<char>(currentSquare),
-                             static_cast<char>(currentSquare + 2)});
-      }
-    }
-  } else {
-    if (board.blackCastling[0]) {
-      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
-                    board.accessBoard(currentSquare + 2) == 0};
-      if (freeRank) {
-        moves.push_back(Move{static_cast<char>(currentSquare),
-                             static_cast<char>(currentSquare + 2)});
-      }
-    }
-    if (board.blackCastling[1]) {
-      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
-                    board.accessBoard(currentSquare - 2) == 0};
-      if (freeRank) {
-        moves.push_back(Move{static_cast<char>(currentSquare),
-                             static_cast<char>(currentSquare - 2)});
-      }
-    }
-  }
-}
-
-void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
-                    int currentSquare, const std::array<Delta, 8>& offsets) {
-  int x{currentSquare % 8};
-  int y{currentSquare / 8};
-
-  for (auto offset : offsets) {
-    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
-    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
-
-    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
-    if (xLimit && yLimit && !sameColor(currentSquare, targetSquare, board)) {
-      moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
-    }
-  }
-
-  if (std::tolower(board.accessBoard(currentSquare)) == 'k') {
-    castle(board, moves, currentSquare);
-  }
-}
-
-void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
-              const std::array<Delta, 4>& offsets) {
-  int x{currentSquare % 8};
-  int y{currentSquare / 8};
-
-  bool amIWhite{isWhite(currentSquare, board)};
-  bool atStart{(amIWhite && y == 6) || (!amIWhite && y == 1)};
-
-  char advanceSquare{static_cast<char>((y + (offsets[0]).y) * 8 + x)};
-  // access the square in front of the pawn
-  bool canAdvance = static_cast<int>(board.accessBoard(advanceSquare) == 0);
-  // is that square empty
-
-  for (auto offset : offsets) {
-    if (!atStart && std::abs(offset.y) == 2) {
-      continue;
-    }  // skip the double jump offset if the pawn is not on its starting square
-
-    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
-    bool yLimit{0 <= y + offset.y &&
-                y + offset.y <= 7};  // is the target square inside the board
-    bool isCapturing{offset.x != 0};
-
-    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
-
-    bool isSameColor{sameColor(currentSquare, targetSquare, board)};
-    bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
-
-    if (xLimit && yLimit) {
-      if (isCapturing && (isOppositeColor || targetSquare == board.enPassant)) {
-        moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
-      } else if (!isCapturing && canAdvance && !isSameColor &&
-                 !isOppositeColor) {
-        moves.push_back(Move{static_cast<char>(currentSquare), targetSquare});
-      }
-    }
-  }
-}
-
 bool isCheck(Board& board) {
-  std::vector<Move> pseudo_moves;
 
   const char king = board.whiteToMove ? board.whiteKing : board.blackKing;
+  std::cout << static_cast<int>(king) << std::endl;
+  std::cout << "############" << std::endl;
 
   for (auto offset : core::offsets::rook) {
     const std::array<int, 2> limits{checkLimits(king, offset)};
@@ -467,8 +333,9 @@ bool isCheck(Board& board) {
       }
     }
   }
-  
-  const std::array<Delta, 4> pawnOffsets = board.whiteToMove ? core::offsets::whitePawn : core::offsets::blackPawn;
+
+  const std::array<Delta, 4> pawnOffsets =
+      board.whiteToMove ? core::offsets::whitePawn : core::offsets::blackPawn;
 
   for (auto offset : pawnOffsets) {
     int x{king % 8};
@@ -488,6 +355,161 @@ bool isCheck(Board& board) {
   }
 
   return false;
+}
+
+void AddMove(const Board& board, std::vector<Move>& moves,
+             const Move& candidateMove) {
+  Board pseudoBoard = board;
+  pseudoBoard.makeMove(candidateMove);
+
+  if (!isCheck(pseudoBoard)) {
+    moves.push_back(candidateMove);
+  }
+}
+
+void movesInLimits(const Board& board, std::vector<Move>& moves,
+                   const std::array<int, 2>& limits, int currentSquare,
+                   int offset) {
+  int targetSquare{currentSquare};
+  while (targetSquare >= limits[0] && targetSquare <= limits[1]) {
+    if (currentSquare == targetSquare) {
+      targetSquare += offset;
+      continue;
+    }
+
+    // break if target has the same color
+    if (sameColor(currentSquare, targetSquare, board)) {
+      break;
+    }
+
+    // here we should verify if the king is in check, and only if not push_back
+    Move candidateMove{static_cast<char>(currentSquare),
+                       static_cast<char>(targetSquare)};
+
+    AddMove(board, moves, candidateMove);
+    // break if target has different color
+    if (oppositeColor(currentSquare, targetSquare, board)) {
+      break;
+    }
+
+    targetSquare += offset;
+  }
+}
+
+void slidingLoop(const Board& board, std::vector<Move>& moves,
+                 int currentSquare, const std::array<int, 4>& offsets) {
+  for (auto offset : offsets) {
+    const std::array<int, 2> limits{checkLimits(currentSquare, offset)};
+    movesInLimits(board, moves, limits, currentSquare, offset);
+  }
+}
+
+void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
+  bool white{isWhite(currentSquare, board)};
+
+  if (white) {
+    if (board.whiteCastling[0]) {
+      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
+                    board.accessBoard(currentSquare - 2) == 0};
+      if (freeRank) {
+        Move candidateMove{static_cast<char>(currentSquare),
+                           static_cast<char>(currentSquare - 2)};
+        AddMove(board, moves, candidateMove);
+      }
+    }
+    if (board.whiteCastling[1]) {
+      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
+                    board.accessBoard(currentSquare + 2) == 0};
+      if (freeRank) {
+        Move candidateMove{static_cast<char>(currentSquare),
+                           static_cast<char>(currentSquare + 2)};
+        AddMove(board, moves, candidateMove);
+      }
+    }
+  } else {
+    if (board.blackCastling[0]) {
+      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
+                    board.accessBoard(currentSquare + 2) == 0};
+      if (freeRank) {
+        Move candidateMove{static_cast<char>(currentSquare),
+                           static_cast<char>(currentSquare + 2)};
+        AddMove(board, moves, candidateMove);
+      }
+    }
+    if (board.blackCastling[1]) {
+      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
+                    board.accessBoard(currentSquare - 2) == 0};
+      if (freeRank) {
+        Move candidateMove{static_cast<char>(currentSquare),
+                           static_cast<char>(currentSquare - 2)};
+        AddMove(board, moves, candidateMove);
+      }
+    }
+  }
+}
+
+void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
+                    int currentSquare, const std::array<Delta, 8>& offsets) {
+  int x{currentSquare % 8};
+  int y{currentSquare / 8};
+
+  for (auto offset : offsets) {
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
+
+    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    if (xLimit && yLimit && !sameColor(currentSquare, targetSquare, board)) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(targetSquare)};
+
+      AddMove(board, moves, candidateMove);
+    }
+  }
+
+  if (std::tolower(board.accessBoard(currentSquare)) == 'k') {
+    castle(board, moves, currentSquare);
+  }
+}
+
+void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
+              const std::array<Delta, 4>& offsets) {
+  int x{currentSquare % 8};
+  int y{currentSquare / 8};
+
+  bool amIWhite{isWhite(currentSquare, board)};
+  bool atStart{(amIWhite && y == 6) || (!amIWhite && y == 1)};
+
+  char advanceSquare{static_cast<char>((y + (offsets[0]).y) * 8 + x)};
+  // access the square in front of the pawn
+  bool canAdvance = static_cast<int>(board.accessBoard(advanceSquare) == 0);
+  // is that square empty
+
+  for (auto offset : offsets) {
+    if (!atStart && std::abs(offset.y) == 2) {
+      continue;
+    }  // skip the double jump offset if the pawn is not on its starting square
+
+    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
+    bool yLimit{0 <= y + offset.y &&
+                y + offset.y <= 7};  // is the target square inside the board
+    bool isCapturing{offset.x != 0};
+
+    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+
+    bool isSameColor{sameColor(currentSquare, targetSquare, board)};
+    bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
+
+    Move candidateMove{static_cast<char>(currentSquare),
+                       static_cast<char>(targetSquare)};
+    if (xLimit && yLimit) {
+      if (isCapturing && (isOppositeColor || targetSquare == board.enPassant)) {
+        AddMove(board, moves, candidateMove);
+      } else if (!isCapturing && canAdvance && !isSameColor &&
+                 !isOppositeColor) {
+        AddMove(board, moves, candidateMove);
+      }
+    }
+  }
 }
 
 void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
