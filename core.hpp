@@ -59,8 +59,8 @@ struct Board {
   //                               P, P, P, P, P, P, P, P,  //
   //                               R, N, B, Q, K, B, N, R};
 
-  char whiteKing{4};
-  char blackKing{60};
+  char whiteKing{60};
+  char blackKing{4};
   std::array<bool, 2> whiteCastling{true, true};
   std::array<bool, 2> blackCastling{true, true};
   // to be read: left, right, according to player view
@@ -69,6 +69,17 @@ struct Board {
 
   char enPassant{64};
   // is en passant available? initialized to 64 as it's not a valid index
+
+  Board() {}  // default constructor
+  Board(const Board& copy) {
+    position = copy.position;
+    whiteKing = copy.whiteKing;
+    blackKing = copy.blackKing;
+    whiteCastling = copy.whiteCastling;
+    blackCastling = copy.blackCastling;
+    whiteToMove = copy.whiteToMove;
+    enPassant = copy.enPassant;
+  }  // copy constructor
 
   char& accessBoard(unsigned long int);
   char& accessBoard(int);

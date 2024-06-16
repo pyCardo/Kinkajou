@@ -26,10 +26,13 @@ Git will ignore the following folders/files:
 - `build/`
 - `*.out` and `*.exe`
 
-### Ideas
-- Validation of legal moves: it may be possible to verify if a move is legal by generating all possible Rook, Bishop and Night moves starting from the King's position. If on any of those landing squares the corresponding piece is found, a check is detected.
+### What's missing?
+- Checkmate banner/warning
+- New game interface
+- Board flip option with F key
+- Count legal moves at fixed depth and test with doctest.h
 
 ## Issues
 - ASan memory leaks
 - Low quality pngs
-- Not a "real" issue, but so far it's possible to castle even if in-between squares are attacked. It will be partly solved once the legal moves filter is implemented, removing the possibility to castle if the king's landing house is attacked. Still, core::castle() (in movegen.cpp) should be updated to prevent castling if an intermidiate house on the king's journey is attacked. The only viable seems to be similar to the legal move filter check. 
+- It's possible to castle even if in-between squares are attacked. Core::castle() (in movegen.cpp) should be updated to prevent castling if an intermidiate house on the king's journey is attacked. The only viable option seems to be similar to the legal move filter check.

@@ -26,7 +26,7 @@ void Board::makeMove(Move move) {
   }
   if (currentPiece == 'K') {
     whiteKing = move.target;
-  }
+  }  // Updating king position
 
   // SPECIAL MOVES
 
@@ -134,19 +134,22 @@ void Board::makeMove(Move move) {
   }
 
   // Promotion
+  bool promoted{false};
   {
     int y = move.target / 8;
     if (currentPiece == 'p' && y == 7) {
       targetPiece = 'q';
+      promoted = true;
     } else if (currentPiece == 'P' && y == 0) {
       targetPiece = 'Q';
+      promoted = true;
     }
   }
 
   // if no special moves occured
-  if (targetPiece != 'q' && targetPiece != 'Q') {  // not promoting
+  if (!promoted) {  // not promoting
     targetPiece = currentPiece;
-  }
+  } // WARNING! THIS MIGHT NOT BE CORRECT/COMPLETE
 
   currentPiece = 0;
   whiteToMove = !whiteToMove;
@@ -220,15 +223,13 @@ std::array<int, 2> checkLimits(int currentSquare, int offset) {
 }
 
 bool isCheck(Board& board) {
-
-  const char king = board.whiteToMove ? board.whiteKing : board.blackKing;
-  std::cout << static_cast<int>(king) << std::endl;
-  std::cout << "############" << std::endl;
+  const int king =
+      static_cast<int>(board.whiteToMove ? board.blackKing : board.whiteKing);
 
   for (auto offset : core::offsets::rook) {
     const std::array<int, 2> limits{checkLimits(king, offset)};
 
-    char enemy{king};
+    int enemy{king};
     while (enemy >= limits[0] && enemy <= limits[1]) {
       if (king == enemy) {
         enemy += offset;
@@ -257,7 +258,7 @@ bool isCheck(Board& board) {
   for (auto offset : core::offsets::bishop) {
     const std::array<int, 2> limits{checkLimits(king, offset)};
 
-    char enemy{king};
+    int enemy{king};
     while (enemy >= limits[0] && enemy <= limits[1]) {
       if (king == enemy) {
         enemy += offset;
@@ -290,7 +291,7 @@ bool isCheck(Board& board) {
     bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
     bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
 
-    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    int enemy{(y + offset.y) * 8 + (x + offset.x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
       auto enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
@@ -307,9 +308,9 @@ bool isCheck(Board& board) {
     bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
     bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
 
-    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    int enemy{(y + offset.y) * 8 + (x + offset.x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      auto enemyPiece =
+      char enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
       if (enemyPiece == 'k') {
         return true;
@@ -324,9 +325,9 @@ bool isCheck(Board& board) {
     bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
     bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
 
-    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    int enemy{(y + offset.y) * 8 + (x + offset.x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      auto enemyPiece =
+      char enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
       if (enemyPiece == 'n') {
         return true;
@@ -335,18 +336,18 @@ bool isCheck(Board& board) {
   }
 
   const std::array<Delta, 4> pawnOffsets =
-      board.whiteToMove ? core::offsets::whitePawn : core::offsets::blackPawn;
+      board.whiteToMove ? core::offsets::blackPawn : core::offsets::whitePawn;
 
-  for (auto offset : pawnOffsets) {
+  for (unsigned long int i{2}; i <= 3; ++i) {
     int x{king % 8};
     int y{king / 8};
 
-    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
-    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
+    bool xLimit{0 <= x + pawnOffsets[i].x && x + pawnOffsets[i].x <= 7};
+    bool yLimit{0 <= y + pawnOffsets[i].y && y + pawnOffsets[i].y <= 7};
 
-    char enemy{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+    int enemy{(y + pawnOffsets[i].y) * 8 + (x + pawnOffsets[i].x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      auto enemyPiece =
+      char enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
       if (enemyPiece == 'p') {
         return true;
@@ -359,7 +360,7 @@ bool isCheck(Board& board) {
 
 void AddMove(const Board& board, std::vector<Move>& moves,
              const Move& candidateMove) {
-  Board pseudoBoard = board;
+  Board pseudoBoard(board);
   pseudoBoard.makeMove(candidateMove);
 
   if (!isCheck(pseudoBoard)) {
@@ -387,6 +388,7 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
                        static_cast<char>(targetSquare)};
 
     AddMove(board, moves, candidateMove);
+
     // break if target has different color
     if (oppositeColor(currentSquare, targetSquare, board)) {
       break;
