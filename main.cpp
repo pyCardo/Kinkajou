@@ -1,74 +1,138 @@
 #include <cassert>
 #include <iostream>
 
-#include "core.hpp"
 #include "gfx.hpp"
 
 int main() {
-  core::Board board;
-  core::Move move;
-  gfx::Piece b('b');
-  gfx::Piece B('B');
-  gfx::Piece k('k');
-  gfx::Piece K('K');
-  gfx::Piece n('n');
-  gfx::Piece N('N');
-  gfx::Piece p('p');
-  gfx::Piece P('P');
-  gfx::Piece q('q');
-  gfx::Piece Q('Q');
-  gfx::Piece r('r');
-  gfx::Piece R('R');
+  try {
+    core::Board board;
+    core::Move move;
+    std::vector<core::Move> moves;
 
-  std::unordered_map<char, gfx::Piece> charToPiece = {
-      {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
-      {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
-  };
+    gfx::Piece b("bB");
+    gfx::Piece B("wB");
+    gfx::Piece k("bK");
+    gfx::Piece K("wK");
+    gfx::Piece n("bN");
+    gfx::Piece N("wN");
+    gfx::Piece p("bP");
+    gfx::Piece P("wP");
+    gfx::Piece q("bQ");
+    gfx::Piece Q("wQ");
+    gfx::Piece r("bR");
+    gfx::Piece R("wR");
 
-  sf::RenderWindow window(
-      sf::VideoMode(gfx::WINDOW_DIMENSION, gfx::WINDOW_DIMENSION),
-      "Chess");
-  window.setFramerateLimit(60);
+    std::unordered_map<char, gfx::Piece> charToPiece = {
+        {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
+        {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
+    };
 
-  sf::RectangleShape square;
-  square.setSize(
-      sf::Vector2f(gfx::SQUARE_SIZE_F, gfx::SQUARE_SIZE_F));
+    std::array<sf::Color, 64> colorMap;
+    gfx::setColorMap(colorMap);
 
-  sf::Event event;
-  bool isMoving{false};
-  char pressed;
-  // board is displayed on execution, then updated when a move is detected
+    sf::RenderWindow window(
+        sf::VideoMode(gfx::WINDOW_DIMENSION, gfx::WINDOW_DIMENSION), "Chess");
+    window.setVerticalSyncEnabled(true);
+    window.setPosition(
+        sf::Vector2i(static_cast<int>(sf::VideoMode::getDesktopMode().width -
+                                      gfx::WINDOW_DIMENSION) /
+                         2,
+                     static_cast<int>(sf::VideoMode::getDesktopMode().height -
+                                      gfx::WINDOW_DIMENSION) /
+                         2));
 
-  while (window.isOpen()) {
-    // event handling
-    while (window.pollEvent(event)) {
-      switch (event.type) {
-        case sf::Event::Closed:
-          window.close();
-          break;
+    sf::RectangleShape square;
+    square.setSize(sf::Vector2f(gfx::SQUARE_SIZE_F, gfx::SQUARE_SIZE_F));
 
-        case sf::Event::MouseButtonPressed:
-          if (event.mouseButton.button == sf::Mouse::Left) {
-            auto location = sf::Mouse::getPosition(window);
-            pressed = gfx::detectSquare(location.x, location.y);
+    bool isMoving{false};
+    bool notClicking{false};
+    bool reversed{false};
 
-            if (isMoving) {
-              move.target = pressed;
-              board.makeMove(move);
-            } else {
-              board.position[static_cast<unsigned long int>(pressed)] != 0
-                  ? move.current = pressed
-                  : isMoving = !isMoving;
+    while (window.isOpen()) {
+      // event handling
+      sf::Event event;
+      while (window.pollEvent(event)) {
+        switch (event.type) {
+          case sf::Event::Closed:
+            window.close();
+            break;
+
+          case sf::Event::KeyPressed:
+            switch (event.key.code) {
+              case sf::Keyboard::F:
+                reversed = !reversed;
+                break;
+                // real time input ->
+                // sf::Keyboard::isKeyPressed(sf::Keyboard::Left)
+
+              default:
+                break;
             }
-            isMoving = !isMoving;
-          }
-          break;
 
-        default:
-          break;
+          default:
+            break;
+        }
       }
+
+      if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && notClicking) {
+        notClicking = false;
+        auto location = sf::Mouse::getPosition(window);
+        char pressed = gfx::detectSquare(location.x, location.y);
+
+        if (!isMoving) {
+          if (board.accessBoard(pressed) != 0) {
+            move.current = pressed;
+
+            moves.clear();
+
+            core::generateMoves(board, moves, move.current);
+
+            for (auto possibleMove : moves) {
+              gfx::highlightSquare(colorMap, possibleMove.target);
+            }
+
+            isMoving = true;
+          }
+        }
+
+        if (isMoving) {
+          move.target = pressed;
+          bool moveIsPseudoLegal{std::find(moves.begin(), moves.end(), move) !=
+                                 moves.end()};
+
+          isMoving = false;
+          gfx::setColorMap(colorMap);
+
+          if (moveIsPseudoLegal) {
+            board.makeMove(move);
+          } else {
+            moves.clear();
+
+            if (board.accessBoard(pressed) != 0) {
+              move.current = pressed;
+              moves.clear();
+              core::generateMoves(board, moves, move.current);
+
+              for (auto possibleMove : moves) {
+                gfx::highlightSquare(colorMap, possibleMove.target);
+              }
+              if (!moves.empty()) {
+                colorMap[static_cast<u32>(pressed)] =
+                    gfx::COLOR_HIGHLIGHT_SELECTED;
+              }
+
+              isMoving = true;
+            }
+          }
+        }
+      } else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        notClicking = true;
+      }  // manually handling mouse button release
+
+      gfx::displayBoard(board, square, window, colorMap, charToPiece);
+      window.display();
     }
-    gfx::displayBoard(board, square, window, charToPiece);
-    window.display();
+  } catch (std::filesystem::filesystem_error const& e) {
+    std::cout << "Exception thrown\n" << e.what() << '\n';
   }
 }
