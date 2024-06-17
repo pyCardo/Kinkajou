@@ -5,7 +5,8 @@
 
 int main() {
   try {
-    core::Board board;
+    std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
+    core::Board board(fen);
     core::Move move;
     std::vector<core::Move> moves;
 
@@ -133,6 +134,8 @@ int main() {
       window.display();
     }
   } catch (std::filesystem::filesystem_error const& e) {
+    std::cout << "Exception thrown\n" << e.what() << '\n';
+  } catch (std::runtime_error const& e) {
     std::cout << "Exception thrown\n" << e.what() << '\n';
   }
 }

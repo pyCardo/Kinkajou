@@ -28,11 +28,19 @@ Git will ignore the following folders/files:
 
 ## Tests
 Testing related resources:\
-https://www.chessprogramming.org/Perft
-https://www.chessprogramming.org/Perft_Results
+https://www.chessprogramming.org/Perft \
+https://www.chessprogramming.org/Perft_Results \
+http://bernd.bplaced.net/fengenerator/fengenerator.html
+
+### FEN Board setup
+- No control over how many ranks are in the first part of the FEN (position might be incomplete)
+
+#### Positions
+- 2n1q3/r1B5/1pB3p1/3K4/2P2P2/r1k4p/5p1R/2N5 w - - 0 1
 
 ## What's missing?
 - Checkmate and stalemate banner/warning
+- Promotion to knight/bishop/rook
 - Draws by repetition, fifty-move rule, insufficient material
 - New game interface
 - Board flip option with F key

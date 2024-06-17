@@ -4,14 +4,125 @@
 
 namespace core {
 
+Board::Board(const std::string& fen) {
+  std::array<char, 12> pieces = {'b', 'k', 'n', 'p', 'q', 'r',
+                                 'B', 'K', 'N', 'P', 'Q', 'R'};
+  std::array<char, 8> spaces = {'1', '2', '3', '4', '5', '6', '7', '8'};
+
+  if (fen.empty()) {
+    throw std::runtime_error("Empty string is not a valid fen");
+  }
+
+  // POSITION SETUP
+  auto fenIt = fen.begin();
+  auto posIt = position.begin();
+  while (fenIt != fen.end() && *fenIt != ' ') {
+    if (posIt == position.end()) {
+      throw std::runtime_error("Exceeded position range");
+    }
+    if (*fenIt == '/') {
+      ++fenIt;
+      continue;
+    } else if (std::find(pieces.begin(), pieces.end(), *fenIt) !=
+               pieces.end()) {
+      *posIt = *fenIt;
+      ++posIt;
+    } else if (std::find(spaces.begin(), spaces.end(), *fenIt) !=
+               spaces.end()) {
+      int numSpaces = *fenIt - '0';
+      posIt += numSpaces;
+    } else {
+      throw std::runtime_error(std::string(1, *fenIt) +
+                               " is not a valid fen character");
+    }
+    ++fenIt;
+  }
+  ++fenIt;
+
+  // MOVING SIDE
+  if (fenIt == fen.end()) {
+    throw std::runtime_error("Incomplete fen is not a valid fen");
+  }
+  switch (*fenIt) {
+    case 'w':
+      whiteToMove = true;
+      break;
+
+    case 'b':
+      whiteToMove = false;
+      break;
+
+    default:
+      throw std::runtime_error(
+          "Error in moving side");  // there must be a moving side
+      break;
+  }
+  fenIt += 2;
+
+  // CASTLING
+  if (fenIt >= fen.end()) {
+    throw std::runtime_error("Incomplete fen");
+  }
+  for (; fenIt != fen.end() && *fenIt != ' '; ++fenIt) {
+    switch (*fenIt) {
+      case '-':
+        if (*(fenIt + 1) != ' ') {
+          throw std::runtime_error("Castling information is incorrect");
+        }
+        break;
+
+      case 'K':
+        whiteCastling[1] = true;
+        break;
+
+      case 'Q':
+        whiteCastling[0] = true;
+        break;
+
+      case 'k':
+        blackCastling[0] = true;
+        break;
+
+      case 'q':
+        blackCastling[1] = true;
+        break;
+
+      default:
+        throw std::runtime_error("Castling information is missing");
+        break;
+    }
+  }
+  ++fenIt;
+
+  // EN PASSANT
+  if (fenIt == fen.end()) {
+    throw std::runtime_error("Incomplete fen");
+  }
+  if (*fenIt != '-') {
+    if (*fenIt >= 97 && *fenIt <= 104) {
+      int x = static_cast<int>(*fenIt) - 97;
+      fenIt++;
+      if (*fenIt >= 49 && *fenIt <= 56) {
+        int y = 7 - (static_cast<int>(*fenIt) - 49);
+        enPassant = static_cast<char>(x + 8 * y);
+      }
+    } else {
+      std::cout << *fenIt;
+      throw std::runtime_error("En Passant information is ill-formed");
+    }
+  }
+
+  // KING POSITIONS
+  whiteKing = static_cast<char>(std::find(position.begin(), position.end(), 'K') - position.begin());
+  blackKing = static_cast<char>(std::find(position.begin(), position.end(), 'k') - position.begin());
+}  // FEN constructor
+
 char& Board::accessBoard(u32 index) { return position[index]; }
 char& Board::accessBoard(int index) {
   auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
 }
-char Board::accessBoard(u32 index) const {
-  return position[index];
-}
+char Board::accessBoard(u32 index) const { return position[index]; }
 char Board::accessBoard(int index) const {
   auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
@@ -23,9 +134,11 @@ void Board::makeMove(Move move) {
 
   if (currentPiece == 'k') {
     blackKing = move.target;
+    blackCastling = {false};
   }
   if (currentPiece == 'K') {
     whiteKing = move.target;
+    whiteCastling = {false};
   }  // Updating king position
 
   // SPECIAL MOVES
@@ -48,17 +161,6 @@ void Board::makeMove(Move move) {
         break;
 
       case 63:
-        whiteCastling[1] = false;
-        break;
-
-      // moving a King
-      case 4:
-        blackCastling[0] = false;
-        blackCastling[1] = false;
-        break;
-
-      case 60:
-        whiteCastling[0] = false;
         whiteCastling[1] = false;
         break;
 
@@ -409,7 +511,7 @@ void slidingLoop(const Board& board, std::vector<Move>& moves,
 void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
   bool white{isWhite(currentSquare, board)};
 
-  if (white) {
+  if (white && currentSquare == 60) {
     if (board.whiteCastling[0]) {
       bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
                     board.accessBoard(currentSquare - 2) == 0};
@@ -428,7 +530,7 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
         AddMove(board, moves, candidateMove);
       }
     }
-  } else {
+  } else if (!white && currentSquare == 4) {
     if (board.blackCastling[0]) {
       bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
                     board.accessBoard(currentSquare + 2) == 0};
@@ -573,10 +675,12 @@ u64 perft(int depth, core::Board& board) {
   }
 
   for (int i{0}; i < 64; ++i) {
-    core::generateMoves(board, moves, i);
+    if (board.accessBoard(i) != 0) {
+      core::generateMoves(board, moves, i);
+    }
   }
 
-  if (depth == 1){
+  if (depth == 1) {
     return static_cast<u64>(moves.size());
   }
 

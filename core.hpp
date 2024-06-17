@@ -1,9 +1,13 @@
 #ifndef CORE_HPP
 #define CORE_HPP
 
+#include <algorithm>
 #include <array>
 #include <cctype>
 #include <cmath>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 using u32 = unsigned long int;
@@ -44,14 +48,7 @@ struct Move {
 // enum Piece_table { P, p, N, n, B, b, R, r, Q, q, K, k };
 
 struct Board {
-  std::array<char, 64> position{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',  //
-                                'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',  //
-                                0,   0,   0,   0,   0,   0,   0,   0,    //
-                                0,   0,   0,   0,   0,   0,   0,   0,    //
-                                0,   0,   0,   0,   0,   0,   0,   0,    //
-                                0,   0,   0,   0,   0,   0,   0,   0,    //
-                                'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',  //
-                                'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'};
+  std::array<char, 64> position{0};
 
   // std::array<char, 64> position{r, n, b, q, k, b, n, r,  //
   //                               p, p, p, p, p, p, p, p,  //
@@ -64,8 +61,8 @@ struct Board {
 
   char whiteKing{60};
   char blackKing{4};
-  std::array<bool, 2> whiteCastling{true, true};
-  std::array<bool, 2> blackCastling{true, true};
+  std::array<bool, 2> whiteCastling{false, false};
+  std::array<bool, 2> blackCastling{false, false};
   // to be read: left, right, according to player view
 
   bool whiteToMove{true};
@@ -73,7 +70,6 @@ struct Board {
   char enPassant{64};
   // is en passant available? initialized to 64 as it's not a valid index
 
-  Board() {}  // default constructor
   Board(const Board& copy) {
     position = copy.position;
     whiteKing = copy.whiteKing;
@@ -83,7 +79,10 @@ struct Board {
     whiteToMove = copy.whiteToMove;
     enPassant = copy.enPassant;
   }  // copy constructor
-  // add FEN constructor
+
+  Board(const std::string& = std::string(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"));
+  // FEN constructor
 
   char& accessBoard(u32);
   char& accessBoard(int);
