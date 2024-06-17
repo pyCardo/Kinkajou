@@ -113,8 +113,10 @@ Board::Board(const std::string& fen) {
   }
 
   // KING POSITIONS
-  whiteKing = static_cast<char>(std::find(position.begin(), position.end(), 'K') - position.begin());
-  blackKing = static_cast<char>(std::find(position.begin(), position.end(), 'k') - position.begin());
+  whiteKing = static_cast<char>(
+      std::find(position.begin(), position.end(), 'K') - position.begin());
+  blackKing = static_cast<char>(
+      std::find(position.begin(), position.end(), 'k') - position.begin());
 }  // FEN constructor
 
 char& Board::accessBoard(u32 index) { return position[index]; }
@@ -511,8 +513,20 @@ void slidingLoop(const Board& board, std::vector<Move>& moves,
 void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
   bool white{isWhite(currentSquare, board)};
 
+  // we can check wheter the king path is free by probing the moves vector for a
+  // specific move; the following implementation uses a lambda function
+
+  bool shortCastle{std::find_if(moves.begin(), moves.end(),
+                                [currentSquare](const Move& move) {
+                                  return move.target == currentSquare + 1;
+                                }) != moves.end()};
+  bool longCastle{std::find_if(moves.begin(), moves.end(),
+                               [currentSquare](const Move& move) {
+                                 return move.target == currentSquare - 1;
+                               }) != moves.end()};
+
   if (white && currentSquare == 60) {
-    if (board.whiteCastling[0]) {
+    if (board.whiteCastling[0] && longCastle) {
       bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
                     board.accessBoard(currentSquare - 2) == 0};
       if (freeRank) {
@@ -521,7 +535,7 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
         AddMove(board, moves, candidateMove);
       }
     }
-    if (board.whiteCastling[1]) {
+    if (board.whiteCastling[1] && shortCastle) {
       bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
                     board.accessBoard(currentSquare + 2) == 0};
       if (freeRank) {
@@ -531,7 +545,7 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
       }
     }
   } else if (!white && currentSquare == 4) {
-    if (board.blackCastling[0]) {
+    if (board.blackCastling[0] && shortCastle) {
       bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
                     board.accessBoard(currentSquare + 2) == 0};
       if (freeRank) {
@@ -540,7 +554,7 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
         AddMove(board, moves, candidateMove);
       }
     }
-    if (board.blackCastling[1]) {
+    if (board.blackCastling[1] && longCastle) {
       bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
                     board.accessBoard(currentSquare - 2) == 0};
       if (freeRank) {
@@ -591,7 +605,8 @@ void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
   for (auto offset : offsets) {
     if (!atStart && std::abs(offset.y) == 2) {
       continue;
-    }  // skip the double jump offset if the pawn is not on its starting square
+    }  // skip the double jump offset if the pawn is not on its starting
+       // square
 
     bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
     bool yLimit{0 <= y + offset.y &&
@@ -679,6 +694,10 @@ u64 perft(int depth, core::Board& board) {
       core::generateMoves(board, moves, i);
     }
   }
+
+  if (moves.empty()) {
+    return 0;
+  }  // the game ends
 
   if (depth == 1) {
     return static_cast<u64>(moves.size());
