@@ -5,7 +5,6 @@
 #include <array>
 #include <cctype>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -42,6 +41,16 @@ struct Move {
   bool operator==(const Move m) {
     return current == m.current && target == m.target;
   }
+
+  std::string algebraic() {
+    char current_x{static_cast<char>(current % 8 + 97)};
+    char current_y{static_cast<char>(-(current / 8) + 56)};
+    char target_x{static_cast<char>(target % 8 + 97)};
+    char target_y{static_cast<char>(-(target / 8) + 56)};
+    // ASCII
+
+    return std::string({current_x, current_y, target_x, target_y});
+  }
 };
 
 // lascio questo enum perché potrebbe servire in seguito
@@ -66,7 +75,6 @@ struct Board {
   // to be read: left, right, according to player view
 
   bool whiteToMove{true};
-
   char enPassant{64};
   // is en passant available? initialized to 64 as it's not a valid index
 
@@ -82,7 +90,7 @@ struct Board {
 
   Board(const std::string& = std::string(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"));
-  // FEN constructor
+  // FEN constructor, with default standard position
 
   char& accessBoard(u32);
   char& accessBoard(int);

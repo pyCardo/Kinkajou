@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 
 #include "core.hpp"
@@ -324,6 +325,7 @@ std::array<int, 2> checkLimits(int currentSquare, int offset) {
   }
 
   return std::array<int, 2>{infLimit, supLimit};
+  // already sorted
 }
 
 bool isCheck(Board& board) {
@@ -422,23 +424,6 @@ bool isCheck(Board& board) {
     }
   }
 
-  for (auto offset : core::offsets::knight) {
-    int x{king % 8};
-    int y{king / 8};
-
-    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
-    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
-
-    int enemy{(y + offset.y) * 8 + (x + offset.x)};
-    if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      char enemyPiece =
-          static_cast<char>(std::tolower(board.accessBoard(enemy)));
-      if (enemyPiece == 'n') {
-        return true;
-      }
-    }
-  }
-
   const std::array<Delta, 4> pawnOffsets =
       board.whiteToMove ? core::offsets::blackPawn : core::offsets::whitePawn;
 
@@ -525,43 +510,34 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
                                  return move.target == currentSquare - 1;
                                }) != moves.end()};
 
+  // check all the in-between squares
+  auto isEmpty = [&](int offset) {
+    return board.accessBoard(currentSquare + offset) == 0;
+  };
+  bool freeLong{isEmpty(-1) && isEmpty(-2) && isEmpty(-3)};
+  bool freeShort{isEmpty(1) && isEmpty(2)};
+
   if (white && currentSquare == 60) {
-    if (board.whiteCastling[0] && longCastle) {
-      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
-                    board.accessBoard(currentSquare - 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare - 2)};
-        AddMove(board, moves, candidateMove);
-      }
+    if (board.whiteCastling[0] && longCastle && freeLong) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare - 2)};
+      AddMove(board, moves, candidateMove);
     }
-    if (board.whiteCastling[1] && shortCastle) {
-      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
-                    board.accessBoard(currentSquare + 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare + 2)};
-        AddMove(board, moves, candidateMove);
-      }
+    if (board.whiteCastling[1] && shortCastle && freeShort) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare + 2)};
+      AddMove(board, moves, candidateMove);
     }
   } else if (!white && currentSquare == 4) {
-    if (board.blackCastling[0] && shortCastle) {
-      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
-                    board.accessBoard(currentSquare + 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare + 2)};
-        AddMove(board, moves, candidateMove);
-      }
+    if (board.blackCastling[0] && shortCastle && freeShort) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare + 2)};
+      AddMove(board, moves, candidateMove);
     }
-    if (board.blackCastling[1] && longCastle) {
-      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
-                    board.accessBoard(currentSquare - 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare - 2)};
-        AddMove(board, moves, candidateMove);
-      }
+    if (board.blackCastling[1] && longCastle && freeLong) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare - 2)};
+      AddMove(board, moves, candidateMove);
     }
   }
 }
@@ -584,7 +560,8 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
     }
   }
 
-  if (std::tolower(board.accessBoard(currentSquare)) == 'k') {
+  if ((board.accessBoard(currentSquare) == 'k' && currentSquare == 4) ||
+      (board.accessBoard(currentSquare) == 'K' && currentSquare == 60)) {
     castle(board, moves, currentSquare);
   }
 }
@@ -680,35 +657,55 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
 }
 }  // namespace core
 
+// namespace test {
+//  u64 perft(int depth, core::Board& board) {
+//    std::vector<core::Move> moves;
+//    u64 nodes{0};
+
+//   for (int i{0}; i < 64; ++i) {
+//     if (board.accessBoard(i) != 0) {
+//       core::generateMoves(board, moves, i);
+//     }
+//   }
+
+//   if (depth == 1) {
+//     return static_cast<u64>(moves.size());
+//   }
+
+//   for (auto move : moves) {
+//     core::Board pseudoBoard(board);
+//     pseudoBoard.makeMove(move);
+//     nodes += perft(depth - 1, pseudoBoard);
+//   }
+
+//   return nodes;
+// }  // this way you can also give it a different starting position
+// }
+
 namespace test {
 u64 perft(int depth, core::Board& board) {
-  std::vector<core::Move> moves;
   u64 nodes{0};
 
-  if (depth == 0) {
-    return 1;
-  }
-
-  for (int i{0}; i < 64; ++i) {
-    if (board.accessBoard(i) != 0) {
+  // generate all possible moves for the current board state
+  for (int i = 0; i < 64; ++i) {
+    if (board.accessBoard(i) != 0) {  // non-empty square
+      std::vector<core::Move> moves;
       core::generateMoves(board, moves, i);
+
+      // at depth 1, simply return the number of legal moves
+      if (depth == 1) {
+        nodes += static_cast<u64>(moves.size());
+      } else {
+        // recursively apply each move and count resulting positions
+        for (const auto& move : moves) {
+          core::Board pseudoBoard(board);
+          pseudoBoard.makeMove(move);
+          nodes += perft(depth - 1, pseudoBoard);
+        }
+      }
     }
   }
 
-  if (moves.empty()) {
-    return 0;
-  }  // the game ends
-
-  if (depth == 1) {
-    return static_cast<u64>(moves.size());
-  }
-
-  for (auto move : moves) {
-    core::Board pseudoBoard(board);
-    pseudoBoard.makeMove(move);
-    nodes += perft(depth - 1, pseudoBoard);
-  }
-
   return nodes;
-}  // this way you can also give it a different starting position
+}
 }  // namespace test
