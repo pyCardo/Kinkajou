@@ -1,5 +1,17 @@
 # Kinkajou: Chess interface and engine
 
+## Castling rules
+
+The right to castle is **permanently** lost:
+1. On either side if the king has moved (*at any point in the game*).
+2. On one side if the respective rook has been moved/captured (*at any point in the game*).
+
+Castling is prevented **temporarily**:
+1. If there is any piece between the king and the rook with which the castling is to be effected.
+2. If either the square on which the king stands, or the square which it must cross, or the square which it is to occupy, is attacked by one or more pieces.
+
+Note that the rook _can_ castle while under attack.
+
 ## Configuration
 
 ### Cmake
