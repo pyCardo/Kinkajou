@@ -51,3 +51,4 @@ http://bernd.bplaced.net/fengenerator/fengenerator.html
 - ASan memory leaks
 - Low quality pngs
 - It's possible to castle even if in-between squares are attacked. Core::castle() (in movegen.cpp) should be updated to prevent castling if an intermidiate house on the king's journey is attacked. The only viable option seems to be similar to the legal move filter check.
+- Castling when in check is an illegal move, and should not be allowed (fix required).

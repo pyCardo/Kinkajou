@@ -37,6 +37,7 @@ auto const blackPawn{
 struct Move {
   char current;
   char target;
+  char promotion{0};
 
   bool operator==(const Move m) {
     return current == m.current && target == m.target;

@@ -5,7 +5,8 @@
 
 int main() {
   try {
-    std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
+    std::string fen =
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
     core::Board board(fen);
     core::Move move;
     std::vector<core::Move> moves;
@@ -27,6 +28,7 @@ int main() {
         {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
         {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
     };
+    std::array<gfx::Piece, 8> promotionList = {Q, R, B, N, q, r, b, n};
 
     std::array<sf::Color, 64> colorMap;
     gfx::setColorMap(colorMap);
@@ -98,14 +100,66 @@ int main() {
 
         if (isMoving) {
           move.target = pressed;
-          bool moveIsPseudoLegal{std::find(moves.begin(), moves.end(), move) !=
-                                 moves.end()};
+
+          long int occurrences{std::count(moves.begin(), moves.end(), move)};
 
           isMoving = false;
           gfx::setColorMap(colorMap);
 
-          if (moveIsPseudoLegal) {
-            board.makeMove(move);
+          if (occurrences != 0) {
+            if (true) {  // promotion
+              sf::RenderWindow option(sf::VideoMode(gfx::OPTION_WINDOW_WIDTH,
+                                                    gfx::OPTION_WINDOW_HEIGHT),
+                                      "Promotion");
+              option.setPosition(sf::Vector2i(
+                  static_cast<int>(sf::VideoMode::getDesktopMode().width -
+                                   gfx::OPTION_WINDOW_WIDTH) /
+                      2,
+                  static_cast<int>(sf::VideoMode::getDesktopMode().height -
+                                   gfx::OPTION_WINDOW_HEIGHT) /
+                      2));
+              while (option.isOpen()) {
+                while (option.pollEvent(event)) {
+                  if (event.type == sf::Event::Closed) {
+                    option.close();
+                    break;
+                  }
+                }
+                gfx::drawOptionWindow(option, square, promotionList,
+                                      board.whiteToMove);
+
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                  auto optLocation = sf::Mouse::getPosition(option);
+                  char optPressed =
+                      gfx::detectSquare(optLocation.x, optLocation.y);
+                  switch (optPressed) {
+                    case 0:
+                      move.promotion = 'q';
+                      break;
+                    case 1:
+                      move.promotion = 'r';
+                      break;
+                    case 2:
+                      move.promotion = 'b';
+                      break;
+                    case 3:
+                      move.promotion = 'n';
+                      break;
+                    default:
+                      move.promotion = 0;
+                      break;
+                  }
+                  option.close();
+                }
+
+                option.display();
+              }
+              if (move.promotion != 0) {
+                board.makeMove(move);
+              }
+            } else {
+              board.makeMove(move);
+            }
           } else {
             moves.clear();
 
