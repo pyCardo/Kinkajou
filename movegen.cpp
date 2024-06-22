@@ -562,7 +562,11 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
 
   if ((board.accessBoard(currentSquare) == 'k' && currentSquare == 4) ||
       (board.accessBoard(currentSquare) == 'K' && currentSquare == 60)) {
-    castle(board, moves, currentSquare);
+    Board pseudoboard(board);
+    pseudoboard.whiteToMove = !pseudoboard.whiteToMove;
+    if (!isCheck(pseudoboard)) {
+      castle(board, moves, currentSquare);
+    } // not currently in check
   }
 }
 
