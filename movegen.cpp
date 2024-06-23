@@ -239,20 +239,13 @@ void Board::makeMove(Move move) {
   }
 
   // Promotion
-  bool promoted{false};
-  {
-    int y = move.target / 8;
-    if (currentPiece == 'p' && y == 7) {
-      targetPiece = 'q';
-      promoted = true;
-    } else if (currentPiece == 'P' && y == 0) {
-      targetPiece = 'Q';
-      promoted = true;
+  if (move.promotion != 0) {
+    if (whiteToMove) {
+      targetPiece = static_cast<char>(toupper(move.promotion));
+    } else {
+      targetPiece = move.promotion;
     }
-  }
-
-  // if no special moves occured
-  if (!promoted) {  // not promoting
+  } else {
     targetPiece = currentPiece;
   }  // WARNING! THIS MIGHT NOT BE CORRECT/COMPLETE
 
@@ -448,11 +441,24 @@ bool isCheck(Board& board) {
 }
 
 void AddMove(const Board& board, std::vector<Move>& moves,
-             const Move& candidateMove) {
+             Move& candidateMove) {
   Board pseudoBoard(board);
   pseudoBoard.makeMove(candidateMove);
 
+  // PROMOTION
+  int y{candidateMove.target / 8};
+  bool isPawn{static_cast<char>(std::tolower(
+                  board.accessBoard(candidateMove.current))) == 'p'};
+  bool promotion{isPawn && (y == 0 || y == 7)};
+
   if (!isCheck(pseudoBoard)) {
+    if (promotion) {
+      for (auto c : offsets::promotionPieces) {
+        candidateMove.promotion = c;
+        moves.push_back(candidateMove);
+      }
+      return;  // pre-empting another push_back
+    }
     moves.push_back(candidateMove);
   }
 }
@@ -566,7 +572,7 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
     pseudoboard.whiteToMove = !pseudoboard.whiteToMove;
     if (!isCheck(pseudoboard)) {
       castle(board, moves, currentSquare);
-    } // not currently in check
+    }  // not currently in check
   }
 }
 
@@ -592,16 +598,21 @@ void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
     bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
     bool yLimit{0 <= y + offset.y &&
                 y + offset.y <= 7};  // is the target square inside the board
-    bool isCapturing{offset.x != 0};
 
-    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
-
-    bool isSameColor{sameColor(currentSquare, targetSquare, board)};
-    bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
-
-    Move candidateMove{static_cast<char>(currentSquare),
-                       static_cast<char>(targetSquare)};
     if (xLimit && yLimit) {
+      // both sameColor and oppositeColor access the board array at the given index,
+      // so this is to prevent them from accessing an invalid memory address
+
+      bool isCapturing{offset.x != 0};
+
+      char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+
+      bool isSameColor{sameColor(currentSquare, targetSquare, board)};
+      bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
+
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(targetSquare)};
+
       if (isCapturing && (isOppositeColor || targetSquare == board.enPassant)) {
         AddMove(board, moves, candidateMove);
       } else if (!isCapturing && canAdvance && !isSameColor &&
@@ -687,6 +698,7 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
 // }
 
 namespace test {
+
 u64 perft(int depth, core::Board& board) {
   u64 nodes{0};
 
@@ -712,4 +724,5 @@ u64 perft(int depth, core::Board& board) {
 
   return nodes;
 }
+
 }  // namespace test

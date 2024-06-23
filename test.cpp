@@ -21,7 +21,7 @@ TEST_CASE("Testing move generation with PERFT") {
               << std::endl;
 
     CHECK(test::perft(5, board) == 4865609);
-    // CHECK(test::perft(6, board) == 119060324);
+    CHECK(test::perft(6, board) == 119060324);
     end = std::chrono::high_resolution_clock::now();
     std::cout << "Time elapsed: "
               << std::chrono::duration<double>(end - start).count() << "s"
@@ -71,8 +71,8 @@ TEST_CASE("Testing move generation with PERFT") {
               << std::endl;
 
     CHECK(test::perft(5, board) == 674624);
-    // CHECK(test::perft(6, board) == 11030083);
-    // end = std::chrono::high_resolution_clock::now();
+    CHECK(test::perft(6, board) == 11030083);
+    end = std::chrono::high_resolution_clock::now();
     std::cout << "Time elapsed: "
               << std::chrono::duration<double>(end - start).count() << "s"
               << std::endl;
@@ -99,12 +99,12 @@ TEST_CASE("Testing move generation with PERFT") {
               << std::chrono::duration<double>(end - start).count() << "s"
               << std::endl;
 
-    // CHECK(test::perft(5, board) == 15833292);
+    CHECK(test::perft(5, board) == 15833292);
     // CHECK(test::perft(6, board) == 706045033);
-    // end = std::chrono::high_resolution_clock::now();
-    // std::cout << "Time elapsed: "
-    //           << std::chrono::duration<double>(end - start).count() << "s"
-    //           << std::endl;
+    end = std::chrono::high_resolution_clock::now();
+    std::cout << "Time elapsed: "
+              << std::chrono::duration<double>(end - start).count() << "s"
+              << std::endl;
   }
 
   SUBCASE("Position 5") {
@@ -155,49 +155,4 @@ TEST_CASE("Testing move generation with PERFT") {
     //           << std::chrono::duration<double>(end - start).count() << "s"
     //           << std::endl;
   }
-
-  // SUBCASE("Counting Nodes") {
-  //   core::Board board(
-  //       "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -");
-
-  //   std::vector<core::Move> moves;
-  //   u64 nmoves{0};
-  //   for (int i{0}; i < 64; ++i) {
-  //     if (board.accessBoard(i) != 0) {
-  //       core::generateMoves(board, moves, i);
-  //     }
-  //   }
-
-  //   for (auto move : moves) {
-  //     core::Board pseudoBoard(board);
-  //     pseudoBoard.makeMove(move);
-
-  //     nmoves += test::perft(1, pseudoBoard);
-  //     std::cout << move.algebraic() << ": " << test::perft(1, pseudoBoard)
-  //               << std::endl;
-  //   }
-
-  //   std::cout << "Total moves: " << nmoves << std::endl;
-  //   CHECK(test::perft(2, board) == 2039);
-
-  //   moves.clear();
-  //   core::Board pseudoboard(board);
-  //   pseudoboard.makeMove(core::Move{28, 18});
-  //   int n{0};
-  //   for (int i{0}; i < 64; ++i) {
-  //     if (pseudoboard.accessBoard(i) != 0) {
-  //       moves.clear();
-  //       core::generateMoves(pseudoboard, moves, i);
-  //       for (auto move : moves) {
-  //         std::cout << move.algebraic() << std::endl;
-  //         ++n;
-  //       }
-  //     }
-  //   }
-  //   std::cout << n;
-
-  //   // for (auto move : moves) {
-  //   //   std::cout << move.algebraic() << std::endl;
-  //   // }
-  // }
 }

@@ -32,6 +32,7 @@ auto const whitePawn{std::array<Delta, 4>{Delta{0, -1}, Delta{0, -2},
 auto const blackPawn{
     std::array<Delta, 4>{Delta{0, 1}, Delta{0, 2}, Delta{-1, 1}, Delta{1, 1}}};
 // white first, then black
+auto const promotionPieces{std::array<char, 4>{'q', 'r', 'b', 'n'}};
 }  // namespace offsets
 
 struct Move {
@@ -50,7 +51,12 @@ struct Move {
     char target_y{static_cast<char>(-(target / 8) + 56)};
     // ASCII
 
-    return std::string({current_x, current_y, target_x, target_y});
+    auto output = std::string({current_x, current_y, target_x, target_y});
+    if (promotion != 0) {
+      output += '=' + promotion;
+    }
+
+    return output;
   }
 };
 
@@ -110,6 +116,10 @@ bool oppositeColor(int, int, const Board&);
 
 std::array<int, 2> checkLimits(int, int);
 
+bool isCheck(Board&);
+
+void AddMove(const Board&, std::vector<Move>&, Move&);
+
 void movesInLimits(const Board&, std::vector<Move>&, const std::array<int, 2>&,
                    int, int);
 
@@ -123,8 +133,6 @@ void nonSlidingLoop(const Board&, std::vector<Move>&, int,
 
 void pawnLoop(const Board&, std::vector<Move>&, int,
               const std::array<Delta, 4>&);
-
-bool isCheck(Board&);
 
 void generateMoves(Board&, std::vector<Move>&, int);
 
