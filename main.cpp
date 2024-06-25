@@ -84,6 +84,12 @@ int main() {
                 gfx::highlightSquare(colorMap, possibleMove.target);
               }
 
+              if (!moves.empty()) {
+                colorMap[static_cast<u32>(pressed)] =
+                    gfx::COLOR_HIGHLIGHT_SELECTED;
+              }
+
+
               isMoving = true;
             }
           } else {
@@ -178,6 +184,7 @@ int main() {
                 for (auto possibleMove : moves) {
                   gfx::highlightSquare(colorMap, possibleMove.target);
                 }
+
                 if (!moves.empty()) {
                   colorMap[static_cast<u32>(pressed)] =
                       gfx::COLOR_HIGHLIGHT_SELECTED;
