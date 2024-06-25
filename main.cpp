@@ -89,7 +89,6 @@ int main() {
                     gfx::COLOR_HIGHLIGHT_SELECTED;
               }
 
-
               isMoving = true;
             }
           } else {
