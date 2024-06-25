@@ -5,7 +5,9 @@
 
 int main() {
   try {
-    core::Board board;
+    std::string fen =
+        "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq -";
+    core::Board board(fen);
     core::Move move;
     std::vector<core::Move> moves;
 
@@ -26,6 +28,7 @@ int main() {
         {'b', b}, {'B', B}, {'k', k}, {'K', K}, {'n', n}, {'N', N},
         {'p', p}, {'P', P}, {'q', q}, {'Q', Q}, {'r', r}, {'R', R},
     };
+    std::array<gfx::Piece, 8> promotionList = {Q, R, B, N, q, r, b, n};
 
     std::array<sf::Color, 64> colorMap;
     gfx::setColorMap(colorMap);
@@ -46,82 +49,142 @@ int main() {
 
     bool isMoving{false};
     bool notClicking{false};
-    bool reversed{false};
 
     while (window.isOpen()) {
       // event handling
       sf::Event event;
       while (window.pollEvent(event)) {
-        switch (event.type) {
-          case sf::Event::Closed:
-            window.close();
-            break;
-
-          case sf::Event::KeyPressed:
-            switch (event.key.code) {
-              case sf::Keyboard::F:
-                reversed = !reversed;
-                break;
-                // real time input ->
-                // sf::Keyboard::isKeyPressed(sf::Keyboard::Left)
-
-              default:
-                break;
-            }
-
-          default:
-            break;
+        if (event.type == sf::Event::Closed) {
+          window.close();
         }
       }
 
       if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && notClicking) {
         notClicking = false;
+
         auto location = sf::Mouse::getPosition(window);
-        char pressed = gfx::detectSquare(location.x, location.y);
+        auto size = window.getSize();
+        bool inBounds = location.x > 0 &&
+                        location.x < static_cast<int>(size.x) &&
+                        location.y > 0 && location.y < static_cast<int>(size.y);
 
-        if (!isMoving) {
-          if (board.accessBoard(pressed) != 0) {
-            move.current = pressed;
+        if (inBounds) {
+          // to prevent any action if user's interaction with option bar
+          char pressed = gfx::detectSquare(location.x, location.y);
 
-            moves.clear();
-
-            core::generateMoves(board, moves, move.current);
-
-            for (auto possibleMove : moves) {
-              gfx::highlightSquare(colorMap, possibleMove.target);
-            }
-
-            isMoving = true;
-          }
-        }
-
-        if (isMoving) {
-          move.target = pressed;
-          bool moveIsPseudoLegal{std::find(moves.begin(), moves.end(), move) !=
-                                 moves.end()};
-
-          isMoving = false;
-          gfx::setColorMap(colorMap);
-
-          if (moveIsPseudoLegal) {
-            board.makeMove(move);
-          } else {
-            moves.clear();
-
+          if (!isMoving) {
             if (board.accessBoard(pressed) != 0) {
               move.current = pressed;
+
               moves.clear();
+
               core::generateMoves(board, moves, move.current);
 
               for (auto possibleMove : moves) {
                 gfx::highlightSquare(colorMap, possibleMove.target);
               }
-              if (!moves.empty()) {
-                colorMap[static_cast<u32>(pressed)] =
-                    gfx::COLOR_HIGHLIGHT_SELECTED;
-              }
 
               isMoving = true;
+            }
+          } else {
+            move.target = pressed;
+            move.promotion = 0;
+
+            long int occurrences{std::count(moves.begin(), moves.end(), move)};
+
+            isMoving = false;
+            gfx::setColorMap(colorMap);
+
+            if (occurrences != 0) {    // move is legal
+              if (occurrences != 1) {  // promotion
+                sf::RenderWindow option(
+                    sf::VideoMode(gfx::OPTION_WINDOW_WIDTH,
+                                  gfx::OPTION_WINDOW_HEIGHT),
+                    "Promotion", sf::Style::Titlebar);
+                option.setPosition(sf::Vector2i(
+                    static_cast<int>(sf::VideoMode::getDesktopMode().width -
+                                     gfx::OPTION_WINDOW_WIDTH) /
+                        2,
+                    static_cast<int>(sf::VideoMode::getDesktopMode().height -
+                                     gfx::OPTION_WINDOW_HEIGHT) /
+                        2));
+                bool optNotClicking{false};
+
+                while (option.isOpen()) {
+                  while (option.pollEvent(event)) {
+                    if (event.type == sf::Event::Closed) {
+                      option.close();
+                      break;
+                    }
+                  }
+
+                  gfx::drawOptionWindow(option, square, promotionList,
+                                        board.whiteToMove);
+
+                  if (sf::Mouse::isButtonPressed(sf::Mouse::Left) &&
+                      optNotClicking) {
+                    optNotClicking = false;
+
+                    auto optLocation = sf::Mouse::getPosition(option);
+                    auto optSize = option.getSize();
+                    bool optInBounds =
+                        optLocation.x > 0 &&
+                        optLocation.x < static_cast<int>(optSize.x) &&
+                        optLocation.y > 0 &&
+                        optLocation.y < static_cast<int>(optSize.y);
+
+                    if (optInBounds) {
+                      char optPressed =
+                          gfx::detectSquare(optLocation.x, optLocation.y);
+                      switch (optPressed) {
+                        case 0:
+                          move.promotion = 'q';
+                          break;
+                        case 1:
+                          move.promotion = 'r';
+                          break;
+                        case 2:
+                          move.promotion = 'b';
+                          break;
+                        case 3:
+                          move.promotion = 'n';
+                          break;
+                        default:
+                          move.promotion = 0;
+                          break;
+                      }
+                      option.close();
+                    }
+                  } else if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                    optNotClicking = true;
+                  }
+
+                  option.display();
+                }
+                if (move.promotion != 0) {
+                  board.makeMove(move);
+                }
+              } else {
+                board.makeMove(move);
+              }
+            } else {
+              moves.clear();
+
+              if (board.accessBoard(pressed) != 0) {
+                move.current = pressed;
+                moves.clear();
+                core::generateMoves(board, moves, move.current);
+
+                for (auto possibleMove : moves) {
+                  gfx::highlightSquare(colorMap, possibleMove.target);
+                }
+                if (!moves.empty()) {
+                  colorMap[static_cast<u32>(pressed)] =
+                      gfx::COLOR_HIGHLIGHT_SELECTED;
+                }
+
+                isMoving = true;
+              }
             }
           }
         }
@@ -133,6 +196,8 @@ int main() {
       window.display();
     }
   } catch (std::filesystem::filesystem_error const& e) {
+    std::cout << "Exception thrown\n" << e.what() << '\n';
+  } catch (std::runtime_error const& e) {
     std::cout << "Exception thrown\n" << e.what() << '\n';
   }
 }

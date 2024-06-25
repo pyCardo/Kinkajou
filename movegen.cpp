@@ -1,17 +1,131 @@
+#include <cassert>
 #include <iostream>
 
 #include "core.hpp"
 
 namespace core {
 
+Board::Board(const std::string& fen) {
+  std::array<char, 12> pieces = {'b', 'k', 'n', 'p', 'q', 'r',
+                                 'B', 'K', 'N', 'P', 'Q', 'R'};
+  std::array<char, 8> spaces = {'1', '2', '3', '4', '5', '6', '7', '8'};
+
+  if (fen.empty()) {
+    throw std::runtime_error("Empty string is not a valid fen");
+  }
+
+  // POSITION SETUP
+  auto fenIt = fen.begin();
+  auto posIt = position.begin();
+  while (fenIt != fen.end() && *fenIt != ' ') {
+    if (posIt == position.end()) {
+      throw std::runtime_error("Exceeded position range");
+    }
+    if (*fenIt == '/') {
+      ++fenIt;
+      continue;
+    } else if (std::find(pieces.begin(), pieces.end(), *fenIt) !=
+               pieces.end()) {
+      *posIt = *fenIt;
+      ++posIt;
+    } else if (std::find(spaces.begin(), spaces.end(), *fenIt) !=
+               spaces.end()) {
+      int numSpaces = *fenIt - '0';
+      posIt += numSpaces;
+    } else {
+      throw std::runtime_error(std::string(1, *fenIt) +
+                               " is not a valid fen character");
+    }
+    ++fenIt;
+  }
+  ++fenIt;
+
+  // MOVING SIDE
+  if (fenIt == fen.end()) {
+    throw std::runtime_error("Incomplete fen is not a valid fen");
+  }
+  switch (*fenIt) {
+    case 'w':
+      whiteToMove = true;
+      break;
+
+    case 'b':
+      whiteToMove = false;
+      break;
+
+    default:
+      throw std::runtime_error(
+          "Error in moving side");  // there must be a moving side
+      break;
+  }
+  fenIt += 2;
+
+  // CASTLING
+  if (fenIt >= fen.end()) {
+    throw std::runtime_error("Incomplete fen");
+  }
+  for (; fenIt != fen.end() && *fenIt != ' '; ++fenIt) {
+    switch (*fenIt) {
+      case '-':
+        if (*(fenIt + 1) != ' ') {
+          throw std::runtime_error("Castling information is incorrect");
+        }
+        break;
+
+      case 'K':
+        whiteCastling[1] = true;
+        break;
+
+      case 'Q':
+        whiteCastling[0] = true;
+        break;
+
+      case 'k':
+        blackCastling[0] = true;
+        break;
+
+      case 'q':
+        blackCastling[1] = true;
+        break;
+
+      default:
+        throw std::runtime_error("Castling information is missing");
+        break;
+    }
+  }
+  ++fenIt;
+
+  // EN PASSANT
+  if (fenIt == fen.end()) {
+    throw std::runtime_error("Incomplete fen");
+  }
+  if (*fenIt != '-') {
+    if (*fenIt >= 97 && *fenIt <= 104) {
+      int x = static_cast<int>(*fenIt) - 97;
+      fenIt++;
+      if (*fenIt >= 49 && *fenIt <= 56) {
+        int y = 7 - (static_cast<int>(*fenIt) - 49);
+        enPassant = static_cast<char>(x + 8 * y);
+      }
+    } else {
+      std::cout << *fenIt;
+      throw std::runtime_error("En Passant information is ill-formed");
+    }
+  }
+
+  // KING POSITIONS
+  whiteKing = static_cast<char>(
+      std::find(position.begin(), position.end(), 'K') - position.begin());
+  blackKing = static_cast<char>(
+      std::find(position.begin(), position.end(), 'k') - position.begin());
+}  // FEN constructor
+
 char& Board::accessBoard(u32 index) { return position[index]; }
 char& Board::accessBoard(int index) {
   auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
 }
-char Board::accessBoard(u32 index) const {
-  return position[index];
-}
+char Board::accessBoard(u32 index) const { return position[index]; }
 char Board::accessBoard(int index) const {
   auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
@@ -23,9 +137,11 @@ void Board::makeMove(Move move) {
 
   if (currentPiece == 'k') {
     blackKing = move.target;
+    blackCastling = {false};
   }
   if (currentPiece == 'K') {
     whiteKing = move.target;
+    whiteCastling = {false};
   }  // Updating king position
 
   // SPECIAL MOVES
@@ -48,17 +164,6 @@ void Board::makeMove(Move move) {
         break;
 
       case 63:
-        whiteCastling[1] = false;
-        break;
-
-      // moving a King
-      case 4:
-        blackCastling[0] = false;
-        blackCastling[1] = false;
-        break;
-
-      case 60:
-        whiteCastling[0] = false;
         whiteCastling[1] = false;
         break;
 
@@ -134,20 +239,13 @@ void Board::makeMove(Move move) {
   }
 
   // Promotion
-  bool promoted{false};
-  {
-    int y = move.target / 8;
-    if (currentPiece == 'p' && y == 7) {
-      targetPiece = 'q';
-      promoted = true;
-    } else if (currentPiece == 'P' && y == 0) {
-      targetPiece = 'Q';
-      promoted = true;
+  if (move.promotion != 0) {
+    if (whiteToMove) {
+      targetPiece = static_cast<char>(toupper(move.promotion));
+    } else {
+      targetPiece = move.promotion;
     }
-  }
-
-  // if no special moves occured
-  if (!promoted) {  // not promoting
+  } else {
     targetPiece = currentPiece;
   }  // WARNING! THIS MIGHT NOT BE CORRECT/COMPLETE
 
@@ -220,6 +318,7 @@ std::array<int, 2> checkLimits(int currentSquare, int offset) {
   }
 
   return std::array<int, 2>{infLimit, supLimit};
+  // already sorted
 }
 
 bool isCheck(Board& board) {
@@ -318,23 +417,6 @@ bool isCheck(Board& board) {
     }
   }
 
-  for (auto offset : core::offsets::knight) {
-    int x{king % 8};
-    int y{king / 8};
-
-    bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
-    bool yLimit{0 <= y + offset.y && y + offset.y <= 7};
-
-    int enemy{(y + offset.y) * 8 + (x + offset.x)};
-    if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      char enemyPiece =
-          static_cast<char>(std::tolower(board.accessBoard(enemy)));
-      if (enemyPiece == 'n') {
-        return true;
-      }
-    }
-  }
-
   const std::array<Delta, 4> pawnOffsets =
       board.whiteToMove ? core::offsets::blackPawn : core::offsets::whitePawn;
 
@@ -359,11 +441,24 @@ bool isCheck(Board& board) {
 }
 
 void AddMove(const Board& board, std::vector<Move>& moves,
-             const Move& candidateMove) {
+             Move& candidateMove) {
   Board pseudoBoard(board);
   pseudoBoard.makeMove(candidateMove);
 
+  // PROMOTION
+  int y{candidateMove.target / 8};
+  bool isPawn{static_cast<char>(std::tolower(
+                  board.accessBoard(candidateMove.current))) == 'p'};
+  bool promotion{isPawn && (y == 0 || y == 7)};
+
   if (!isCheck(pseudoBoard)) {
+    if (promotion) {
+      for (auto c : offsets::promotionPieces) {
+        candidateMove.promotion = c;
+        moves.push_back(candidateMove);
+      }
+      return;  // pre-empting another push_back
+    }
     moves.push_back(candidateMove);
   }
 }
@@ -409,43 +504,46 @@ void slidingLoop(const Board& board, std::vector<Move>& moves,
 void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
   bool white{isWhite(currentSquare, board)};
 
-  if (white) {
-    if (board.whiteCastling[0]) {
-      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
-                    board.accessBoard(currentSquare - 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare - 2)};
-        AddMove(board, moves, candidateMove);
-      }
+  // we can check wheter the king path is free by probing the moves vector for a
+  // specific move; the following implementation uses a lambda function
+
+  bool shortCastle{std::find_if(moves.begin(), moves.end(),
+                                [currentSquare](const Move& move) {
+                                  return move.target == currentSquare + 1;
+                                }) != moves.end()};
+  bool longCastle{std::find_if(moves.begin(), moves.end(),
+                               [currentSquare](const Move& move) {
+                                 return move.target == currentSquare - 1;
+                               }) != moves.end()};
+
+  // check all the in-between squares
+  auto isEmpty = [&](int offset) {
+    return board.accessBoard(currentSquare + offset) == 0;
+  };
+  bool freeLong{isEmpty(-1) && isEmpty(-2) && isEmpty(-3)};
+  bool freeShort{isEmpty(1) && isEmpty(2)};
+
+  if (white && currentSquare == 60) {
+    if (board.whiteCastling[0] && longCastle && freeLong) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare - 2)};
+      AddMove(board, moves, candidateMove);
     }
-    if (board.whiteCastling[1]) {
-      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
-                    board.accessBoard(currentSquare + 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare + 2)};
-        AddMove(board, moves, candidateMove);
-      }
+    if (board.whiteCastling[1] && shortCastle && freeShort) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare + 2)};
+      AddMove(board, moves, candidateMove);
     }
-  } else {
-    if (board.blackCastling[0]) {
-      bool freeRank{board.accessBoard(currentSquare + 1) == 0 &&
-                    board.accessBoard(currentSquare + 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare + 2)};
-        AddMove(board, moves, candidateMove);
-      }
+  } else if (!white && currentSquare == 4) {
+    if (board.blackCastling[0] && shortCastle && freeShort) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare + 2)};
+      AddMove(board, moves, candidateMove);
     }
-    if (board.blackCastling[1]) {
-      bool freeRank{board.accessBoard(currentSquare - 1) == 0 &&
-                    board.accessBoard(currentSquare - 2) == 0};
-      if (freeRank) {
-        Move candidateMove{static_cast<char>(currentSquare),
-                           static_cast<char>(currentSquare - 2)};
-        AddMove(board, moves, candidateMove);
-      }
+    if (board.blackCastling[1] && longCastle && freeLong) {
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(currentSquare - 2)};
+      AddMove(board, moves, candidateMove);
     }
   }
 }
@@ -468,8 +566,13 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
     }
   }
 
-  if (std::tolower(board.accessBoard(currentSquare)) == 'k') {
-    castle(board, moves, currentSquare);
+  if ((board.accessBoard(currentSquare) == 'k' && currentSquare == 4) ||
+      (board.accessBoard(currentSquare) == 'K' && currentSquare == 60)) {
+    Board pseudoboard(board);
+    pseudoboard.whiteToMove = !pseudoboard.whiteToMove;
+    if (!isCheck(pseudoboard)) {
+      castle(board, moves, currentSquare);
+    }  // not currently in check
   }
 }
 
@@ -489,21 +592,27 @@ void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
   for (auto offset : offsets) {
     if (!atStart && std::abs(offset.y) == 2) {
       continue;
-    }  // skip the double jump offset if the pawn is not on its starting square
+    }  // skip the double jump offset if the pawn is not on its starting
+       // square
 
     bool xLimit{0 <= x + offset.x && x + offset.x <= 7};
     bool yLimit{0 <= y + offset.y &&
                 y + offset.y <= 7};  // is the target square inside the board
-    bool isCapturing{offset.x != 0};
 
-    char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
-
-    bool isSameColor{sameColor(currentSquare, targetSquare, board)};
-    bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
-
-    Move candidateMove{static_cast<char>(currentSquare),
-                       static_cast<char>(targetSquare)};
     if (xLimit && yLimit) {
+      // both sameColor and oppositeColor access the board array at the given index,
+      // so this is to prevent them from accessing an invalid memory address
+
+      bool isCapturing{offset.x != 0};
+
+      char targetSquare{static_cast<char>((y + offset.y) * 8 + (x + offset.x))};
+
+      bool isSameColor{sameColor(currentSquare, targetSquare, board)};
+      bool isOppositeColor{oppositeColor(currentSquare, targetSquare, board)};
+
+      Move candidateMove{static_cast<char>(currentSquare),
+                         static_cast<char>(targetSquare)};
+
       if (isCapturing && (isOppositeColor || targetSquare == board.enPassant)) {
         AddMove(board, moves, candidateMove);
       } else if (!isCapturing && canAdvance && !isSameColor &&
@@ -563,29 +672,57 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
 }
 }  // namespace core
 
+// namespace test {
+//  u64 perft(int depth, core::Board& board) {
+//    std::vector<core::Move> moves;
+//    u64 nodes{0};
+
+//   for (int i{0}; i < 64; ++i) {
+//     if (board.accessBoard(i) != 0) {
+//       core::generateMoves(board, moves, i);
+//     }
+//   }
+
+//   if (depth == 1) {
+//     return static_cast<u64>(moves.size());
+//   }
+
+//   for (auto move : moves) {
+//     core::Board pseudoBoard(board);
+//     pseudoBoard.makeMove(move);
+//     nodes += perft(depth - 1, pseudoBoard);
+//   }
+
+//   return nodes;
+// }  // this way you can also give it a different starting position
+// }
+
 namespace test {
+
 u64 perft(int depth, core::Board& board) {
-  std::vector<core::Move> moves;
   u64 nodes{0};
 
-  if (depth == 0) {
-    return 1;
-  }
+  // generate all possible moves for the current board state
+  for (int i = 0; i < 64; ++i) {
+    if (board.accessBoard(i) != 0) {  // non-empty square
+      std::vector<core::Move> moves;
+      core::generateMoves(board, moves, i);
 
-  for (int i{0}; i < 64; ++i) {
-    core::generateMoves(board, moves, i);
-  }
-
-  if (depth == 1){
-    return static_cast<u64>(moves.size());
-  }
-
-  for (auto move : moves) {
-    core::Board pseudoBoard(board);
-    pseudoBoard.makeMove(move);
-    nodes += perft(depth - 1, pseudoBoard);
+      // at depth 1, simply return the number of legal moves
+      if (depth == 1) {
+        nodes += static_cast<u64>(moves.size());
+      } else {
+        // recursively apply each move and count resulting positions
+        for (const auto& move : moves) {
+          core::Board pseudoBoard(board);
+          pseudoBoard.makeMove(move);
+          nodes += perft(depth - 1, pseudoBoard);
+        }
+      }
+    }
   }
 
   return nodes;
-}  // this way you can also give it a different starting position
+}
+
 }  // namespace test

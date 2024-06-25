@@ -16,8 +16,10 @@ auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
 auto const COLOR_HIGHLIGHT_DARK = sf::Color(185, 65, 45, 255);
 auto const COLOR_HIGHLIGHT_SELECTED = sf::Color(237, 151, 52, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 800;
+int const WINDOW_DIMENSION = 600;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
+int const OPTION_WINDOW_WIDTH = 4 * SQUARE_SIZE_I;
+int const OPTION_WINDOW_HEIGHT = SQUARE_SIZE_I;
 int const BOARD_SIZE = 64;
 float const SQUARE_SIZE_F =
     WINDOW_DIMENSION /
@@ -31,7 +33,7 @@ class Piece {
 
  public:
   sf::Sprite sprite;
-  Piece(std::string id){
+  Piece(std::string id) {
     path_.assign("pieces/");
     path_ /= id + ".png";
 
@@ -117,6 +119,21 @@ void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
     colorMap[static_cast<u32>(index)] = COLOR_HIGHLIGHT_DARK;
   } else if (colorMap[static_cast<u32>(index)] == COLOR_LIGHT) {
     colorMap[static_cast<u32>(index)] = COLOR_HIGHLIGHT_LIGHT;
+  }
+}
+
+void drawOptionWindow(sf::RenderWindow& window, sf::RectangleShape& square,
+                      std::array<gfx::Piece, 8> list, bool side) {
+  window.clear();
+  for (int i{0}; i < 4; i++) {
+    auto color = (i % 2) == 0 ? gfx::COLOR_LIGHT : gfx::COLOR_DARK;
+    spriteSetup(square, i*gfx::SQUARE_SIZE_I, 0, color);
+    window.draw(square);
+  }
+
+  for (int i{0}; i < 4; i++) {
+    int offset = (!side) * 4;
+    list[static_cast<u32>(i + offset)].toScreen(window, i, 0);
   }
 }
 
