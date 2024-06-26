@@ -136,6 +136,7 @@ void pawnLoop(const Board&, std::vector<Move>&, int,
 
 void generateMoves(Board&, std::vector<Move>&, int);
 
+bool gameOver(Board&);
 }  // namespace core
 
 namespace test {

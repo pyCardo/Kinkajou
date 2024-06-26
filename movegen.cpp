@@ -600,8 +600,9 @@ void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
                 y + offset.y <= 7};  // is the target square inside the board
 
     if (xLimit && yLimit) {
-      // both sameColor and oppositeColor access the board array at the given index,
-      // so this is to prevent them from accessing an invalid memory address
+      // both sameColor and oppositeColor access the board array at the given
+      // index, so this is to prevent them from accessing an invalid memory
+      // address
 
       bool isCapturing{offset.x != 0};
 
@@ -670,6 +671,22 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
     }
   }
 }
+
+bool gameOver(Board& board) {
+  // 0 means the game is not over, 1 means checkmate, 2 means stalemate
+  std::vector<Move> possible_moves;
+
+  for (int i{0}; i < 64; i++) {
+    generateMoves(board, possible_moves, i);
+  }
+
+  if (possible_moves.empty()) {
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace core
 
 // namespace test {

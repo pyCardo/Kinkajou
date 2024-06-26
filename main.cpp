@@ -6,7 +6,7 @@
 int main() {
   try {
     std::string fen =
-        "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq -";
+        "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1R1K b kq -";
     core::Board board(fen);
     core::Move move;
     std::vector<core::Move> moves;
@@ -56,6 +56,73 @@ int main() {
       while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
           window.close();
+        }
+      }
+
+      { // handling game result
+
+        if (gameOver(board)) {
+        
+        board.whiteToMove = !board.whiteToMove; // we invert turns, because isCheck only looks for opponent's checks
+        int gameEnding = isCheck(board) ? 1 : 2; // 1 means checkmate, 2 means stalemate
+
+          sf::RenderWindow resultWindow(
+              sf::VideoMode(gfx::OPTION_WINDOW_WIDTH,
+                            gfx::OPTION_WINDOW_HEIGHT),
+              "Result", sf::Style::Titlebar);
+          resultWindow.setPosition(sf::Vector2i(
+              static_cast<int>(sf::VideoMode::getDesktopMode().width -
+                               gfx::OPTION_WINDOW_WIDTH) /
+                  2,
+              static_cast<int>(sf::VideoMode::getDesktopMode().height -
+                               gfx::OPTION_WINDOW_HEIGHT) /
+                  2));
+
+          while (resultWindow.isOpen()) {
+            while (resultWindow.pollEvent(event)) {
+              if (event.type == sf::Event::Closed) {
+                resultWindow.close();
+                window.close();
+                break;
+              }
+            }
+
+            // Declare and load a font
+            sf::Font font;
+            std::filesystem::path fontPath_;
+            fontPath_.assign("fonts/arial.ttf");
+
+            if (!font.loadFromFile(fontPath_)) {
+              throw std::filesystem::filesystem_error(
+                  "Can't load font", fontPath_,
+                  std::make_error_code(std::errc::no_such_file_or_directory));
+            }
+
+            std::string gameResult;
+            switch (gameEnding) {
+              case 1:
+                gameResult = board.whiteToMove ? "1 - 0" : "0 - 1"; // remember turns are now inverted
+                break;
+
+              case 2:
+                gameResult = "1/2 - 1/2";
+                break;
+
+              default:
+                break;
+            }
+
+            // Create a text
+            sf::Text text(gameResult, font);
+            text.setCharacterSize(30);
+            text.setStyle(sf::Text::Bold);
+            text.setFillColor(sf::Color::White);
+            text.setPosition(gfx::SQUARE_SIZE_F * 1.6, gfx::SQUARE_SIZE_F * 0.2);
+
+            // Draw it
+            resultWindow.draw(text);
+            resultWindow.display();
+          }
         }
       }
 
