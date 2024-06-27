@@ -48,7 +48,6 @@ http://bernd.bplaced.net/fengenerator/fengenerator.html
 - No control over how many ranks are in the first part of the FEN (position might be incomplete)
 
 ## What's missing?
-- Checkmate and stalemate banner/warning
 - Draws by repetition, fifty-move rule, insufficient material
 - New game interface
 - Board flip option with F key

@@ -5,8 +5,7 @@
 
 int main() {
   try {
-    std::string fen =
-        "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1R1K b kq -";
+    std::string fen = "7k/4Q3/6K1/8/8/8/8/8 w - - 0 1";
     core::Board board(fen);
     core::Move move;
     std::vector<core::Move> moves;
@@ -59,12 +58,14 @@ int main() {
         }
       }
 
-      { // handling game result
+      {  // handling game result
 
         if (gameOver(board)) {
-        
-        board.whiteToMove = !board.whiteToMove; // we invert turns, because isCheck only looks for opponent's checks
-        int gameEnding = isCheck(board) ? 1 : 2; // 1 means checkmate, 2 means stalemate
+          board.whiteToMove =
+              !board.whiteToMove;  // we invert turns, because isCheck only
+                                   // looks for opponent's checks
+          int gameEnding =
+              isCheck(board) ? 1 : 2;  // 1 means checkmate, 2 means stalemate
 
           sf::RenderWindow resultWindow(
               sf::VideoMode(gfx::OPTION_WINDOW_WIDTH,
@@ -101,11 +102,14 @@ int main() {
             std::string gameResult;
             switch (gameEnding) {
               case 1:
-                gameResult = board.whiteToMove ? "1 - 0" : "0 - 1"; // remember turns are now inverted
+                gameResult =
+                    board.whiteToMove
+                        ? "White wins"
+                        : "Black wins";  // remember turns are now inverted
                 break;
 
               case 2:
-                gameResult = "1/2 - 1/2";
+                gameResult = "Draw";
                 break;
 
               default:
@@ -114,10 +118,16 @@ int main() {
 
             // Create a text
             sf::Text text(gameResult, font);
-            text.setCharacterSize(30);
-            text.setStyle(sf::Text::Bold);
+            text.setCharacterSize(32);
+            // text.setStyle(sf::Text::Bold);
             text.setFillColor(sf::Color::White);
-            text.setPosition(gfx::SQUARE_SIZE_F * 1.6, gfx::SQUARE_SIZE_F * 0.2);
+
+            text.setPosition((static_cast<float>(gfx::OPTION_WINDOW_WIDTH) -
+                              text.getLocalBounds().width) /
+                                 2.f,
+                             gfx::OPTION_WINDOW_HEIGHT / 2.f -
+                                 text.getLocalBounds().height * .9f);
+            // SFML behaviour about this is unaccountable
 
             // Draw it
             resultWindow.draw(text);
