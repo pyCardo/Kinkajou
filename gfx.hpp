@@ -56,9 +56,6 @@ void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
   window.draw(sprite);
 }
 
-/* Qui ci sarebbe da scegliere: preferiamo avere questa funzione come void e
- * passarle un rect già creato, oppure vogliamo che lei lo crei e lo
- * restituisca? La prima opzione sembra più efficiente nell'uso di memoria*/
 void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
   rect.setPosition(static_cast<float>(x / SQUARE_SIZE_I) * SQUARE_SIZE_F,
                    static_cast<float>(y / SQUARE_SIZE_I) * SQUARE_SIZE_F);
@@ -77,12 +74,9 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
 
     spriteSetup(square, x * SQUARE_SIZE_I, y * SQUARE_SIZE_I, colorMap[i]);
     window.draw(square);
-    // memory leak risolto se le linee "window.draw(square);" e
-    // "charToPiece.at(id).toScreen(window, x, y);" sono rimosse
 
     if (board.accessBoard(i) != 0) {
       char id = board.accessBoard(i);
-      // only compiles using map.at() instead of operator[]
       charToPiece.at(id).toScreen(window, x, y);
     }
   }
@@ -93,13 +87,6 @@ char detectSquare(int x, int y) {
   int b = y / SQUARE_SIZE_I;  // rounding to closest integer
   return static_cast<char>(a + b * 8);
 }
-
-// Delta pxlCoordinates(int i) {
-//   int x = static_cast<int>(i % 8);
-//   int y = static_cast<int>(i / 8);
-
-//   return Delta{x * SQUARE_SIZE_I, y * SQUARE_SIZE_I};
-// }
 
 void setColorMap(std::array<sf::Color, 64>& colorMap) {
   for (u32 i{0}; i < BOARD_SIZE; ++i) {
