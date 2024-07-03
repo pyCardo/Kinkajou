@@ -60,20 +60,8 @@ struct Move {
   }
 };
 
-// lascio questo enum perché potrebbe servire in seguito
-// enum Piece_table { P, p, N, n, B, b, R, r, Q, q, K, k };
-
 struct Board {
   std::array<char, 64> position{0};
-
-  // std::array<char, 64> position{r, n, b, q, k, b, n, r,  //
-  //                               p, p, p, p, p, p, p, p,  //
-  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
-  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
-  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
-  //                               0, 0, 0, 0, 0, 0, 0, 0,  //
-  //                               P, P, P, P, P, P, P, P,  //
-  //                               R, N, B, Q, K, B, N, R};
 
   char whiteKing{60};
   char blackKing{4};
@@ -136,6 +124,7 @@ void pawnLoop(const Board&, std::vector<Move>&, int,
 
 void generateMoves(Board&, std::vector<Move>&, int);
 
+bool gameOver(Board&);
 }  // namespace core
 
 namespace test {

@@ -600,8 +600,9 @@ void pawnLoop(const Board& board, std::vector<Move>& moves, int currentSquare,
                 y + offset.y <= 7};  // is the target square inside the board
 
     if (xLimit && yLimit) {
-      // both sameColor and oppositeColor access the board array at the given index,
-      // so this is to prevent them from accessing an invalid memory address
+      // both sameColor and oppositeColor access the board array at the given
+      // index, so this is to prevent them from accessing an invalid memory
+      // address
 
       bool isCapturing{offset.x != 0};
 
@@ -670,32 +671,23 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
     }
   }
 }
+
+bool gameOver(Board& board) {
+  // 0 means the game is not over, 1 means checkmate, 2 means stalemate
+  std::vector<Move> possibleMoves;
+
+  for (int i{0}; i < 64; i++) {
+    generateMoves(board, possibleMoves, i);
+  }
+
+  if (possibleMoves.empty()) {
+    return true;
+  }
+
+  return false;
+}
+
 }  // namespace core
-
-// namespace test {
-//  u64 perft(int depth, core::Board& board) {
-//    std::vector<core::Move> moves;
-//    u64 nodes{0};
-
-//   for (int i{0}; i < 64; ++i) {
-//     if (board.accessBoard(i) != 0) {
-//       core::generateMoves(board, moves, i);
-//     }
-//   }
-
-//   if (depth == 1) {
-//     return static_cast<u64>(moves.size());
-//   }
-
-//   for (auto move : moves) {
-//     core::Board pseudoBoard(board);
-//     pseudoBoard.makeMove(move);
-//     nodes += perft(depth - 1, pseudoBoard);
-//   }
-
-//   return nodes;
-// }  // this way you can also give it a different starting position
-// }
 
 namespace test {
 
