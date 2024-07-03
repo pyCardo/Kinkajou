@@ -674,13 +674,13 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
 
 bool gameOver(Board& board) {
   // 0 means the game is not over, 1 means checkmate, 2 means stalemate
-  std::vector<Move> possible_moves;
+  std::vector<Move> possibleMoves;
 
   for (int i{0}; i < 64; i++) {
-    generateMoves(board, possible_moves, i);
+    generateMoves(board, possibleMoves, i);
   }
 
-  if (possible_moves.empty()) {
+  if (possibleMoves.empty()) {
     return true;
   }
 
