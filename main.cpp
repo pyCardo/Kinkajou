@@ -5,8 +5,7 @@
 
 int main() {
   try {
-    std::string fen = "7k/4Q3/6K1/8/8/8/8/8 w - -";
-    core::Board board(fen);
+    core::Board board();
     core::Move move;
     std::vector<core::Move> moves;
 
