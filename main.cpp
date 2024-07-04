@@ -1,11 +1,10 @@
-#include <cassert>
 #include <iostream>
 
 #include "gfx.hpp"
 
 int main() {
   try {
-    core::Board board();
+    core::Board board;
     core::Move move;
     std::vector<core::Move> moves;
 
@@ -87,7 +86,7 @@ int main() {
               }
             }
 
-            // Declare and load a font
+            // declare and load a font
             sf::Font font;
             std::filesystem::path fontPath_;
             fontPath_.assign("fonts/arial.ttf");
@@ -115,7 +114,7 @@ int main() {
                 break;
             }
 
-            // Create a text
+            // create a text
             sf::Text text(gameResult, font);
             text.setCharacterSize(32);
             // text.setStyle(sf::Text::Bold);
@@ -128,7 +127,7 @@ int main() {
                                  text.getLocalBounds().height * .9f);
             // SFML behaviour about this is unaccountable
 
-            // Draw it
+            // draw it
             resultWindow.draw(text);
             resultWindow.display();
           }

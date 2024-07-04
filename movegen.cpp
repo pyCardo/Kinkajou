@@ -142,15 +142,14 @@ void Board::makeMove(Move move) {
   if (currentPiece == 'K') {
     whiteKing = move.target;
     whiteCastling = {false};
-  }  // Updating king position
+  }  // updating king position
 
   // SPECIAL MOVES
-
-  // Castling
+  // castling
   {
     // update castling rights
     switch (move.current) {
-      // moving a Rook
+      // moving a rook
       case 0:
         blackCastling[1] = false;
         break;
@@ -172,7 +171,7 @@ void Board::makeMove(Move move) {
     }
 
     switch (move.target) {
-      // a Rook is captured
+      // a rook is captured
       case 0:
         blackCastling[1] = false;
         break;
@@ -215,7 +214,7 @@ void Board::makeMove(Move move) {
     }
   }
 
-  // En Passant
+  // en Passant
   {
     bool isPawn{currentPiece == 'p' || currentPiece == 'P'};
 
@@ -238,7 +237,7 @@ void Board::makeMove(Move move) {
     }
   }
 
-  // Promotion
+  // promotion
   if (move.promotion != 0) {
     if (whiteToMove) {
       targetPiece = static_cast<char>(toupper(move.promotion));
@@ -247,7 +246,7 @@ void Board::makeMove(Move move) {
     }
   } else {
     targetPiece = currentPiece;
-  }  // WARNING! THIS MIGHT NOT BE CORRECT/COMPLETE
+  }
 
   currentPiece = 0;
   whiteToMove = !whiteToMove;

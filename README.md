@@ -16,14 +16,16 @@ Note that the rook _can_ castle while under attack.
 
 ### Cmake
 
-Set up debug mode with:
+Set up debug mode and compile:
 ~~~bash
 $ cmake -S . -B build/-Debug -DCMAKE_BUILD_TYPE=Debug
+$ cmake --build build/-Debug
 ~~~
 
-Compile with:
+Set up release mode and compile:
 ~~~bash
-$ cmake --build build/-Debug
+$ cmake -S . -B build/-Release -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build/-Release
 ~~~
 
 Manual compile (no warnings):

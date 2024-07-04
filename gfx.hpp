@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <filesystem>
-#include <string>
 
 #include "core.hpp"
 
@@ -16,7 +15,7 @@ auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
 auto const COLOR_HIGHLIGHT_DARK = sf::Color(185, 65, 45, 255);
 auto const COLOR_HIGHLIGHT_SELECTED = sf::Color(237, 151, 52, 255);
 int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 600;
+int const WINDOW_DIMENSION = 800;
 int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
 int const OPTION_WINDOW_WIDTH = 4 * SQUARE_SIZE_I;
 int const OPTION_WINDOW_HEIGHT = SQUARE_SIZE_I;
@@ -114,7 +113,7 @@ void drawOptionWindow(sf::RenderWindow& window, sf::RectangleShape& square,
   window.clear();
   for (int i{0}; i < 4; i++) {
     auto color = (i % 2) == 0 ? gfx::COLOR_LIGHT : gfx::COLOR_DARK;
-    spriteSetup(square, i*gfx::SQUARE_SIZE_I, 0, color);
+    spriteSetup(square, i * gfx::SQUARE_SIZE_I, 0, color);
     window.draw(square);
   }
 
