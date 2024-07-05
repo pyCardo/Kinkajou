@@ -29,9 +29,9 @@ class Piece {
   char c_;
   std::filesystem::path path_;
   sf::Texture texture_;
+  sf::Sprite sprite;
 
  public:
-  sf::Sprite sprite;
   Piece(std::string id) {
     path_.assign("pieces/");
     path_ /= id + ".png";
@@ -49,19 +49,19 @@ class Piece {
   void toScreen(sf::RenderWindow&, int, int);
 };
 
-void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
+inline void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
   sprite.setPosition(SQUARE_SIZE_F * static_cast<float>(x),
                      SQUARE_SIZE_F * static_cast<float>(y));
   window.draw(sprite);
 }
 
-void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
+inline void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
   rect.setPosition(static_cast<float>(x / SQUARE_SIZE_I) * SQUARE_SIZE_F,
                    static_cast<float>(y / SQUARE_SIZE_I) * SQUARE_SIZE_F);
   rect.setFillColor(color);
 }
 
-void displayBoard(const core::Board& board, sf::RectangleShape& square,
+inline void displayBoard(const core::Board& board, sf::RectangleShape& square,
                   sf::RenderWindow& window,
                   const std::array<sf::Color, 64>& colorMap,
                   std::unordered_map<char, Piece>& charToPiece) {
@@ -81,13 +81,13 @@ void displayBoard(const core::Board& board, sf::RectangleShape& square,
   }
 }
 
-char detectSquare(int x, int y) {
+inline char detectSquare(int x, int y) {
   int a = x / SQUARE_SIZE_I;
   int b = y / SQUARE_SIZE_I;  // rounding to closest integer
   return static_cast<char>(a + b * 8);
 }
 
-void setColorMap(std::array<sf::Color, 64>& colorMap) {
+inline void setColorMap(std::array<sf::Color, 64>& colorMap) {
   for (u32 i{0}; i < BOARD_SIZE; ++i) {
     int x = static_cast<int>(i % 8);
     int y = static_cast<int>(i / 8);
@@ -100,7 +100,7 @@ void setColorMap(std::array<sf::Color, 64>& colorMap) {
   }
 }
 
-void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
+inline void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
   if (colorMap[static_cast<u32>(index)] == COLOR_DARK) {
     colorMap[static_cast<u32>(index)] = COLOR_HIGHLIGHT_DARK;
   } else if (colorMap[static_cast<u32>(index)] == COLOR_LIGHT) {
@@ -108,7 +108,7 @@ void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
   }
 }
 
-void drawOptionWindow(sf::RenderWindow& window, sf::RectangleShape& square,
+inline void drawOptionWindow(sf::RenderWindow& window, sf::RectangleShape& square,
                       std::array<gfx::Piece, 8> list, bool side) {
   window.clear();
   for (int i{0}; i < 4; i++) {
