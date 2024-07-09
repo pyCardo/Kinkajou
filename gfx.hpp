@@ -26,7 +26,6 @@ float const SQUARE_SIZE_F =
 float const SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
 
 class Piece {
-  char c_;
   std::filesystem::path path_;
   sf::Texture texture_;
   sf::Sprite sprite;

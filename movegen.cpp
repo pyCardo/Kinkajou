@@ -129,7 +129,7 @@ char Board::accessBoard(u32 index) const { return position[index]; }
 char Board::accessBoard(int index) const {
   auto idx{static_cast<u32>(index)};
   return accessBoard(idx);
-};
+}
 
 void Board::makeMove(Move move) {
   char& currentPiece{accessBoard(move.current)};

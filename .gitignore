@@ -9,3 +9,7 @@ build/
 # executables
 *.out
 *.exe
+
+# archives and PDFs
+*.zip
+*.pdf
