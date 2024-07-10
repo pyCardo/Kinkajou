@@ -9,21 +9,21 @@
 
 namespace gfx {
 
-auto const COLOR_LIGHT = sf::Color(241, 217, 192, 255);
-auto const COLOR_DARK = sf::Color(150, 100, 75, 255);
-auto const COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
-auto const COLOR_HIGHLIGHT_DARK = sf::Color(185, 65, 45, 255);
-auto const COLOR_HIGHLIGHT_SELECTED = sf::Color(237, 151, 52, 255);
-int const PNG_SIZE = 2048;
-int const WINDOW_DIMENSION = 800;
-int const SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
-int const OPTION_WINDOW_WIDTH = 4 * SQUARE_SIZE_I;
-int const OPTION_WINDOW_HEIGHT = SQUARE_SIZE_I;
-int const BOARD_SIZE = 64;
-float const SQUARE_SIZE_F =
+inline const auto COLOR_LIGHT = sf::Color(241, 217, 192, 255);
+inline const auto COLOR_DARK = sf::Color(150, 100, 75, 255);
+inline const auto COLOR_HIGHLIGHT_LIGHT = sf::Color(230, 122, 110, 255);
+inline const auto COLOR_HIGHLIGHT_DARK = sf::Color(185, 65, 45, 255);
+inline const auto COLOR_HIGHLIGHT_SELECTED = sf::Color(237, 151, 52, 255);
+inline constexpr int PNG_SIZE = 2048;
+inline constexpr int WINDOW_DIMENSION = 800;
+inline constexpr int SQUARE_SIZE_I = WINDOW_DIMENSION / 8;
+inline constexpr int OPTION_WINDOW_WIDTH = 4 * SQUARE_SIZE_I;
+inline constexpr int OPTION_WINDOW_HEIGHT = SQUARE_SIZE_I;
+inline constexpr int BOARD_SIZE = 64;
+inline constexpr float SQUARE_SIZE_F =
     WINDOW_DIMENSION /
     8.f;  // two different attributes to perform both integer and float division
-float const SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
+inline constexpr float SCALE_FACTOR = SQUARE_SIZE_F / PNG_SIZE;
 
 class Piece {
   std::filesystem::path path_;
