@@ -62,7 +62,7 @@ Board::Board(const std::string& fen) {
 
   // CASTLING
   if (fenIt >= fen.end()) {
-    throw std::runtime_error("Incomplete fen");
+    throw std::runtime_error("Incomplete fen is not a valid fen");
   }
   for (; fenIt != fen.end() && *fenIt != ' '; ++fenIt) {
     switch (*fenIt) {
@@ -97,7 +97,7 @@ Board::Board(const std::string& fen) {
 
   // EN PASSANT
   if (fenIt == fen.end()) {
-    throw std::runtime_error("Incomplete fen");
+    throw std::runtime_error("Incomplete fen is not a valid fen");
   }
   if (*fenIt != '-') {
     if (*fenIt >= 97 && *fenIt <= 104) {
@@ -106,9 +106,10 @@ Board::Board(const std::string& fen) {
       if (*fenIt >= 49 && *fenIt <= 56) {
         int y = 7 - (static_cast<int>(*fenIt) - 49);
         enPassant = static_cast<char>(x + 8 * y);
+      } else {
+        throw std::runtime_error("En Passant information is ill-formed");
       }
     } else {
-      std::cout << *fenIt;
       throw std::runtime_error("En Passant information is ill-formed");
     }
   }
@@ -341,7 +342,7 @@ bool isCheck(Board& board) {
 
       // break if target has different color
       if (oppositeColor(king, enemy, board)) {
-        auto enemyPiece =
+        const auto enemyPiece =
             static_cast<char>(std::tolower(board.accessBoard(enemy)));
         if (enemyPiece == 'r' || enemyPiece == 'q') {
           return true;
@@ -370,7 +371,7 @@ bool isCheck(Board& board) {
 
       // break if target has different color
       if (oppositeColor(king, enemy, board)) {
-        auto enemyPiece =
+        const auto enemyPiece =
             static_cast<char>(std::tolower(board.accessBoard(enemy)));
         if (enemyPiece == 'b' || enemyPiece == 'q') {
           return true;
@@ -391,7 +392,7 @@ bool isCheck(Board& board) {
 
     int enemy{(y + offset.y) * 8 + (x + offset.x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      auto enemyPiece =
+      const auto enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
       if (enemyPiece == 'n') {
         return true;
@@ -408,7 +409,7 @@ bool isCheck(Board& board) {
 
     int enemy{(y + offset.y) * 8 + (x + offset.x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      char enemyPiece =
+      const auto enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
       if (enemyPiece == 'k') {
         return true;
@@ -428,7 +429,7 @@ bool isCheck(Board& board) {
 
     int enemy{(y + pawnOffsets[i].y) * 8 + (x + pawnOffsets[i].x)};
     if (xLimit && yLimit && oppositeColor(king, enemy, board)) {
-      char enemyPiece =
+      const auto enemyPiece =
           static_cast<char>(std::tolower(board.accessBoard(enemy)));
       if (enemyPiece == 'p') {
         return true;
@@ -477,7 +478,7 @@ void movesInLimits(const Board& board, std::vector<Move>& moves,
       break;
     }
 
-    // here we should verify if the king is in check, and only if not push_back
+    // verify if the king is in check, and only if not push_back
     Move candidateMove{static_cast<char>(currentSquare),
                        static_cast<char>(targetSquare)};
 
@@ -515,7 +516,7 @@ void castle(const Board& board, std::vector<Move>& moves, int currentSquare) {
                                  return move.target == currentSquare - 1;
                                }) != moves.end()};
 
-  // check all the in-between squares
+  // check emptiness of all the in-between squares
   auto isEmpty = [&](int offset) {
     return board.accessBoard(currentSquare + offset) == 0;
   };
@@ -568,7 +569,7 @@ void nonSlidingLoop(const Board& board, std::vector<Move>& moves,
   if ((board.accessBoard(currentSquare) == 'k' && currentSquare == 4) ||
       (board.accessBoard(currentSquare) == 'K' && currentSquare == 60)) {
     Board pseudoboard(board);
-    pseudoboard.whiteToMove = !pseudoboard.whiteToMove;
+    pseudoboard.whiteToMove = !pseudoboard.whiteToMove;  // passing the move
     if (!isCheck(pseudoboard)) {
       castle(board, moves, currentSquare);
     }  // not currently in check
@@ -672,7 +673,6 @@ void generateMoves(Board& board, std::vector<Move>& moves, int currentSquare) {
 }
 
 bool gameOver(Board& board) {
-  // 0 means the game is not over, 1 means checkmate, 2 means stalemate
   std::vector<Move> possibleMoves;
 
   for (int i{0}; i < 64; i++) {
@@ -695,20 +695,18 @@ u64 perft(int depth, core::Board& board) {
 
   // generate all possible moves for the current board state
   for (int i = 0; i < 64; ++i) {
-    if (board.accessBoard(i) != 0) {  // non-empty square
-      std::vector<core::Move> moves;
-      core::generateMoves(board, moves, i);
+    std::vector<core::Move> moves;
+    core::generateMoves(board, moves, i);
 
-      // at depth 1, simply return the number of legal moves
-      if (depth == 1) {
-        nodes += static_cast<u64>(moves.size());
-      } else {
-        // recursively apply each move and count resulting positions
-        for (const auto& move : moves) {
-          core::Board pseudoBoard(board);
-          pseudoBoard.makeMove(move);
-          nodes += perft(depth - 1, pseudoBoard);
-        }
+    // at depth 1, simply return the number of legal moves
+    if (depth == 1) {
+      nodes += static_cast<u64>(moves.size());
+    } else {
+      // recursively apply each move and count resulting positions
+      for (const auto& move : moves) {
+        core::Board pseudoBoard(board);
+        pseudoBoard.makeMove(move);
+        nodes += perft(depth - 1, pseudoBoard);
       }
     }
   }

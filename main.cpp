@@ -56,85 +56,78 @@ int main() {
         }
       }
 
-      {  // handling game result
+      if (gameOver(board)) {
+        board.whiteToMove =
+            !board.whiteToMove;  // we invert turns, because isCheck only
+                                 // looks for opponent's checks
+        int gameEnding =
+            isCheck(board) ? 1 : 2;  // 1 means checkmate, 2 means stalemate
 
-        if (gameOver(board)) {
-          board.whiteToMove =
-              !board.whiteToMove;  // we invert turns, because isCheck only
-                                   // looks for opponent's checks
-          int gameEnding =
-              isCheck(board) ? 1 : 2;  // 1 means checkmate, 2 means stalemate
+        sf::RenderWindow resultWindow(
+            sf::VideoMode(gfx::OPTION_WINDOW_WIDTH, gfx::OPTION_WINDOW_HEIGHT),
+            "Result", sf::Style::Titlebar);
+        resultWindow.setPosition(sf::Vector2i(
+            static_cast<int>(sf::VideoMode::getDesktopMode().width -
+                             gfx::OPTION_WINDOW_WIDTH) /
+                2,
+            static_cast<int>(sf::VideoMode::getDesktopMode().height -
+                             gfx::OPTION_WINDOW_HEIGHT) /
+                2));
 
-          sf::RenderWindow resultWindow(
-              sf::VideoMode(gfx::OPTION_WINDOW_WIDTH,
-                            gfx::OPTION_WINDOW_HEIGHT),
-              "Result", sf::Style::Titlebar);
-          resultWindow.setPosition(sf::Vector2i(
-              static_cast<int>(sf::VideoMode::getDesktopMode().width -
-                               gfx::OPTION_WINDOW_WIDTH) /
-                  2,
-              static_cast<int>(sf::VideoMode::getDesktopMode().height -
-                               gfx::OPTION_WINDOW_HEIGHT) /
-                  2));
-
-          while (resultWindow.isOpen()) {
-            while (resultWindow.pollEvent(event)) {
-              if (event.type == sf::Event::Closed) {
-                resultWindow.close();
-                window.close();
-                break;
-              }
+        while (resultWindow.isOpen()) {
+          while (resultWindow.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+              resultWindow.close();
+              window.close();
+              break;
             }
-
-            // declare and load a font
-            sf::Font font;
-            std::filesystem::path fontPath_;
-            fontPath_.assign("fonts/arial.ttf");
-
-            if (!font.loadFromFile(fontPath_)) {
-              throw std::filesystem::filesystem_error(
-                  "Can't load font", fontPath_,
-                  std::make_error_code(std::errc::no_such_file_or_directory));
-            }
-
-            std::string gameResult;
-            switch (gameEnding) {
-              case 1:
-                gameResult =
-                    board.whiteToMove
-                        ? "White wins"
-                        : "Black wins";  // remember turns are now inverted
-                break;
-
-              case 2:
-                gameResult = "Draw";
-                break;
-
-              default:
-                break;
-            }
-
-            // create a text
-            sf::Text text(gameResult, font);
-            text.setCharacterSize(32);
-            // text.setStyle(sf::Text::Bold);
-            text.setFillColor(sf::Color::White);
-
-            text.setPosition((static_cast<float>(gfx::OPTION_WINDOW_WIDTH) -
-                              text.getLocalBounds().width) /
-                                 2.f,
-                             gfx::OPTION_WINDOW_HEIGHT / 2.f -
-                                 text.getLocalBounds().height * .9f);
-            // SFML behaviour about this is unaccountable
-
-            // draw it
-            resultWindow.draw(text);
-            resultWindow.display();
           }
-        }
-      }
 
-      if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && notClicking) {
+          // declare and load a font
+          sf::Font font;
+          std::filesystem::path fontPath_;
+          fontPath_.assign("fonts/arial.ttf");
+
+          if (!font.loadFromFile(fontPath_)) {
+            throw std::filesystem::filesystem_error(
+                "Can't load font", fontPath_,
+                std::make_error_code(std::errc::no_such_file_or_directory));
+          }
+
+          std::string gameResult;
+          switch (gameEnding) {
+            case 1:
+              gameResult =
+                  board.whiteToMove
+                      ? "White wins"
+                      : "Black wins";  // remember turns are now inverted
+              break;
+
+            case 2:
+              gameResult = "Draw";
+              break;
+
+            default:
+              break;
+          }
+
+          // create a text
+          sf::Text text(gameResult, font);
+          text.setCharacterSize(32);
+          // text.setStyle(sf::Text::Bold);
+          text.setFillColor(sf::Color::White);
+
+          text.setPosition((static_cast<float>(gfx::OPTION_WINDOW_WIDTH) -
+                            text.getLocalBounds().width) /
+                               2.f,
+                           gfx::OPTION_WINDOW_HEIGHT / 2.f -
+                               text.getLocalBounds().height * .9f);
+          // SFML behaviour about text placement is unaccountable
+
+          resultWindow.draw(text);
+          resultWindow.display();
+        }
+      } else if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && notClicking) {
         notClicking = false;
 
         auto location = sf::Mouse::getPosition(window);
@@ -144,7 +137,7 @@ int main() {
                         location.y > 0 && location.y < static_cast<int>(size.y);
 
         if (inBounds) {
-          // to prevent any action if user's interaction with option bar
+          // to prevent any action if user's interacting with option bar
           char pressed = gfx::detectSquare(location.x, location.y);
 
           if (!isMoving) {

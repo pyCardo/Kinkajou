@@ -54,16 +54,17 @@ inline void Piece::toScreen(sf::RenderWindow& window, int x, int y) {
   window.draw(sprite);
 }
 
-inline void spriteSetup(sf::RectangleShape& rect, int x, int y, sf::Color color) {
+inline void spriteSetup(sf::RectangleShape& rect, int x, int y,
+                        sf::Color color) {
   rect.setPosition(static_cast<float>(x / SQUARE_SIZE_I) * SQUARE_SIZE_F,
                    static_cast<float>(y / SQUARE_SIZE_I) * SQUARE_SIZE_F);
   rect.setFillColor(color);
 }
 
 inline void displayBoard(const core::Board& board, sf::RectangleShape& square,
-                  sf::RenderWindow& window,
-                  const std::array<sf::Color, 64>& colorMap,
-                  std::unordered_map<char, Piece>& charToPiece) {
+                         sf::RenderWindow& window,
+                         const std::array<sf::Color, 64>& colorMap,
+                         std::unordered_map<char, Piece>& charToPiece) {
   window.clear();
 
   for (u32 i{0}; i < BOARD_SIZE; ++i) {
@@ -107,8 +108,9 @@ inline void highlightSquare(std::array<sf::Color, 64>& colorMap, int index) {
   }
 }
 
-inline void drawOptionWindow(sf::RenderWindow& window, sf::RectangleShape& square,
-                      std::array<gfx::Piece, 8> list, bool side) {
+inline void drawOptionWindow(sf::RenderWindow& window,
+                             sf::RectangleShape& square,
+                             std::array<gfx::Piece, 8> list, bool side) {
   window.clear();
   for (int i{0}; i < 4; i++) {
     auto color = (i % 2) == 0 ? gfx::COLOR_LIGHT : gfx::COLOR_DARK;

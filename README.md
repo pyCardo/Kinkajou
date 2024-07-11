@@ -53,6 +53,7 @@ http://bernd.bplaced.net/fengenerator/fengenerator.html
 - Draws by repetition, fifty-move rule, insufficient material
 - New game interface
 - Board flip option with F key
+- std::bitset for tests
 
 ## Issues
 - ASan memory leaks

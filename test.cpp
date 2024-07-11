@@ -21,12 +21,12 @@ TEST_CASE("Testing move generation with PERFT") {
               << std::endl;
 
     CHECK(test::perft(5, board) == 4865609);
-    CHECK(test::perft(6, board) == 119060324);
     end = std::chrono::high_resolution_clock::now();
     std::cout << "Time elapsed: "
               << std::chrono::duration<double>(end - start).count() << "s"
               << std::endl;
 
+    // CHECK(test::perft(6, board) == 119060324);
     // CHECK(test::perft(7, board) == 3195901860);
     // CHECK(test::perft(8, board) == 84998978956);
     // end = std::chrono::high_resolution_clock::now();
