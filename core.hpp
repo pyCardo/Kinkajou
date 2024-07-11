@@ -38,7 +38,7 @@ struct Move {
   char target;
   char promotion{0};
 
-  bool operator==(const Move m) {
+  bool operator==(const Move m) const{
     return current == m.current && target == m.target;
   }
 
