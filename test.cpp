@@ -155,4 +155,32 @@ TEST_CASE("Testing move generation with PERFT") {
     //           << std::chrono::duration<double>(end - start).count() << "s"
     //           << std::endl;
   }
+  SUBCASE("Position 7") {
+    const auto start = std::chrono::high_resolution_clock::now();
+    core::Board board(
+        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - -");
+
+    CHECK(test::perft(1, board) == 46);
+    CHECK(test::perft(2, board) == 2079);
+    CHECK(test::perft(3, board) == 89890);
+    CHECK(test::perft(4, board) == 3894594);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "Time elapsed: "
+              << std::chrono::duration<double>(end - start).count() << "s"
+              << std::endl;
+
+    // CHECK(test::perft(5, board) == 164075551);
+    // CHECK(test::perft(6, board) == 6923051137);
+    // end = std::chrono::high_resolution_clock::now();
+    // std::cout << "Time elapsed: "
+    //           << std::chrono::duration<double>(end - start).count() << "s"
+    //           << std::endl;
+
+    // CHECK(test::perft(7, board) == 287188994746);
+    // CHECK(test::perft(8, board) == 11923589843526);
+    // end = std::chrono::high_resolution_clock::now();
+    // std::cout << "Time elapsed: "
+    //           << std::chrono::duration<double>(end - start).count() << "s"
+    //           << std::endl;
+  }
 }
